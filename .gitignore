@@ -1,0 +1,11 @@
+bin/
+src/*.pyc
+src/parser.out
+src/parsetab.py
+src/dump
+dump
+parser.out
+parsetab.py
+.scribings
+test/*.dot
+test/*.png
