@@ -4,7 +4,7 @@ import lexer # our lexer
 tokens = lexer.tokens
 from subprocess import call
 import sys
-from tac import *
+import tac
 import symbolTable
 programLineOffset = 0
 haltExecution = False
@@ -13,10 +13,10 @@ def p_file_input(p):
 	"""file_input :	single_stmt ENDMARKER
 	"""
 	p[0] = p[1]
-	emit(ST.getCurrentScope(), '','', -1, 'HALT')
+	TAC.emit(ST.getCurrentScope(), '','', -1, 'HALT')
 	ST.addAttributeToCurrentScope('numParam', 0)
 	ST.removeCurrentScope()
-	printCode()
+	TAC.printCode()
 	ST.printSymbolTableHistory()
 
 # Our temporary symbol
@@ -39,9 +39,9 @@ def p_single_stmt1(p):
 def p_funcdef(p):
     """funcdef : DEF NAME MarkerScope parameters MarkerArg COLON suite
     """
-    noop(ST.getCurrentScope(), p[7]['beginlist'])
-    noop(ST.getCurrentScope(), p[7]['endlist'])
-    emit(ST.getCurrentScope(), '', '', '', 'JUMP_RETURN')
+    TAC.noop(ST.getCurrentScope(), p[7]['beginlist'])
+    TAC.noop(ST.getCurrentScope(), p[7]['endlist'])
+    TAC.emit(ST.getCurrentScope(), '', '', '', 'JUMP_RETURN')
     ST.removeCurrentScope()
     p[0] = dict()
     p[0]['type'] = 'FUNCTION'
@@ -57,12 +57,12 @@ def p_MarkerScope(p):
 		error('Redefinition', p[0]['name'])
 	else:
 		ST.addIdentifier(p[0]['name'], 'FUNCTION')
-		place = getNewTempVar()
+		place = TAC.getNewTempVar()
 		ST.addAttribute(p[0]['name'], ST.getCurrentScope(), place)
 		ST.addAttribute(p[0]['name'], 'name', p[0]['name'])
-		# emit(ST.getCurrentScope(), place, p[0]['name'], '', 'REF')
+		# TAC.emit(ST.getCurrentScope(), place, p[0]['name'], '', 'REF')
 		ST.addScope(p[0]['name'])
-		createNewFucntionCode(p[0]['name'])
+		TAC.createNewFucntionCode(p[0]['name'])
 
 def p_MarkerArg(p):
 	"""MarkerArg 	:
@@ -72,7 +72,7 @@ def p_MarkerArg(p):
 			error('Redefinition', arg)
 		else:
 			ST.addIdentifier(arg, 'UNDEFINED')
-			place = getNewTempVar()
+			place = TAC.getNewTempVar()
 			ST.addAttribute(arg, ST.getCurrentScope(), place)
 	ST.addAttributeToCurrentScope('numParam', len(p[-1]))
 
@@ -100,15 +100,15 @@ def p_function_call(p):
 				pass
 			else:
 				for param in p[3]:
-					emit(ST.getCurrentScope(), param['place'], '', '', 'PARAM')
+					TAC.emit(ST.getCurrentScope(), param['place'], '', '', 'PARAM')
 
-			emit(ST.getCurrentScope(), '', '', p[1], 'JUMPLABEL')
+			TAC.emit(ST.getCurrentScope(), '', '', p[1], 'JUMPLABEL')
 			# fname = ST.getAttribute(p[1], 'name')
 			fname = p[1]
 			# print fname
 			p[0]['type'] = ST.getAttributeFromFunctionList(fname, 'returnType')
-			returnPlace = getNewTempVar()
-			emit(ST.getCurrentScope(), returnPlace, '', '', 'FUNCTION_RETURN')
+			returnPlace = TAC.getNewTempVar()
+			TAC.emit(ST.getCurrentScope(), returnPlace, '', '', 'FUNCTION_RETURN')
 			p[0]['place'] = returnPlace
 		else :
 			error('Referencej', p[1])
@@ -182,7 +182,7 @@ def p_small_stmt(p):
 					| print_stmt Marker
 	"""
 	p[0] = p[1]
-	backpatch(ST.getCurrentScope(), p[1].get('nextlist', []), p[2]['quad'])
+	TAC.backpatch(ST.getCurrentScope(), p[1].get('nextlist', []), p[2]['quad'])
 
 
 # expr_stmt: testlist (augassign testlist | ('=' testlist)*)
@@ -208,37 +208,37 @@ def p_expr_stmt(p):
 				error('Type', p)
 			# width = ST.getWidthFromType(p[1]['type'])
 			# baseAddrLeft = ST.getBaseAddress(ST.getCurrentScope(), p[1]['name'])
-			# indexLeft = getNewTempVar()
-			# emit(ST.getCurrentScope(), indexLeft, p[1]['place'], '', '=')
-			# relativeAddrLeft = getNewTempVar()
-			# emit(ST.getCurrentScope(), relativeAddrLeft, indexLeft, width, '*')
+			# indexLeft = TAC.getNewTempVar()
+			# TAC.emit(ST.getCurrentScope(), indexLeft, p[1]['place'], '', '=')
+			# relativeAddrLeft = TAC.getNewTempVar()
+			# TAC.emit(ST.getCurrentScope(), relativeAddrLeft, indexLeft, width, '*')
 			absAddrLeft = p[1]['absAddr']
-			# emit(ST.getCurrentScope(), absAddrLeft, baseAddrLeft, relativeAddrLeft, '+')
+			# TAC.emit(ST.getCurrentScope(), absAddrLeft, baseAddrLeft, relativeAddrLeft, '+')
 
 			# baseAddrRight = ST.getBaseAddress(ST.getCurrentScope(), p[3]['name'])
-			# indexRight = getNewTempVar()
-			# emit(ST.getCurrentScope(), indexRight, p[3]['place'], '', '=')
-			# relativeAddrRight = getNewTempVar()
-			# emit(ST.getCurrentScope(), relativeAddrRight, indexRight, width, '*')
-			# absAddrRight = getNewTempVar()
-			# emit(ST.getCurrentScope(), absAddrRight, baseAddrRight, relativeAddrRight, '+')
-			value = getNewTempVar()
-			emit(ST.getCurrentScope(), value, p[3]['place'], '', '=')
-			emit(ST.getCurrentScope(), absAddrLeft, value, '', 'SW')
+			# indexRight = TAC.getNewTempVar()
+			# TAC.emit(ST.getCurrentScope(), indexRight, p[3]['place'], '', '=')
+			# relativeAddrRight = TAC.getNewTempVar()
+			# TAC.emit(ST.getCurrentScope(), relativeAddrRight, indexRight, width, '*')
+			# absAddrRight = TAC.getNewTempVar()
+			# TAC.emit(ST.getCurrentScope(), absAddrRight, baseAddrRight, relativeAddrRight, '+')
+			value = TAC.getNewTempVar()
+			TAC.emit(ST.getCurrentScope(), value, p[3]['place'], '', '=')
+			TAC.emit(ST.getCurrentScope(), absAddrLeft, value, '', 'SW')
 		except:
 			# a[i] = x
 			if p[1]['type'] != p[3]['type']:
 				error('Type', p)
 			# width = ST.getWidthFromType(p[1]['type'])
 			# baseAddr = ST.getBaseAddress(ST.getCurrentScope(), p[1]['name'])
-			# index = getNewTempVar()
-			# emit(ST.getCurrentScope(), index, p[1]['place'], '', '=')
-			# relativeAddr = getNewTempVar()
-			# emit(ST.getCurrentScope(), relativeAddr, index, width, '*')
+			# index = TAC.getNewTempVar()
+			# TAC.emit(ST.getCurrentScope(), index, p[1]['place'], '', '=')
+			# relativeAddr = TAC.getNewTempVar()
+			# TAC.emit(ST.getCurrentScope(), relativeAddr, index, width, '*')
 			absAddr = p[1]['absAddr']
-			# emit(ST.getCurrentScope(), absAddr, baseAddr, relativeAddr, '+')
+			# TAC.emit(ST.getCurrentScope(), absAddr, baseAddr, relativeAddr, '+')
 			try:
-				emit(ST.getCurrentScope(), absAddr, p[3]['place'], '', 'SW')
+				TAC.emit(ST.getCurrentScope(), absAddr, p[3]['place'], '', 'SW')
 			except:		
 				error('Referencek', p)
 		
@@ -250,28 +250,28 @@ def p_expr_stmt(p):
 			p[3]['isArray']
 			# width = ST.getWidthFromType(p[3]['type'])
 			# baseAddr = ST.getBaseAddress(ST.getCurrentScope(), p[3]['name'])
-			# index = getNewTempVar()
-			# emit(ST.getCurrentScope(), index, p[3]['place'], '', '=')
-			# relativeAddr = getNewTempVar()
-			# emit(ST.getCurrentScope(), relativeAddr, index, width, '*')
-			# absAddr = getNewTempVar()
-			# emit(ST.getCurrentScope(), absAddr, baseAddr, relativeAddr, '+')
-			value = getNewTempVar()
-			emit(ST.getCurrentScope(), value, p[3]['absAddr'], '', 'LW')
+			# index = TAC.getNewTempVar()
+			# TAC.emit(ST.getCurrentScope(), index, p[3]['place'], '', '=')
+			# relativeAddr = TAC.getNewTempVar()
+			# TAC.emit(ST.getCurrentScope(), relativeAddr, index, width, '*')
+			# absAddr = TAC.getNewTempVar()
+			# TAC.emit(ST.getCurrentScope(), absAddr, baseAddr, relativeAddr, '+')
+			value = TAC.getNewTempVar()
+			TAC.emit(ST.getCurrentScope(), value, p[3]['absAddr'], '', 'LW')
 
 			if ST.exists(p[1]['name']):
 				ST.addAttribute(p[1]['name'], 'type', p[3]['type'])
 				if ST.existsInCurrentScope(p[1]['name']):
 					place = ST.getAttribute(p[1]['name'], ST.getCurrentScope())
 				else:
-					place = getNewTempVar()
+					place = TAC.getNewTempVar()
 					ST.addAttribute(p[1]['name'], ST.getCurrentScope(), place)
 			else:
 				ST.addIdentifier(p[1]['name'], p[3]['type'])
-				place = getNewTempVar()
+				place = TAC.getNewTempVar()
 				ST.addAttribute(p[1]['name'], ST.getCurrentScope(), place)
 			p[0]['nextlist'] = []
-			emit(ST.getCurrentScope(),place, value, '', '=')
+			TAC.emit(ST.getCurrentScope(),place, value, '', '=')
 
 
 		except:
@@ -289,19 +289,19 @@ def p_expr_stmt(p):
 				if ST.existsInCurrentScope(p[1]['name']):
 					place = ST.getAttribute(p[1]['name'], ST.getCurrentScope())
 				else:
-					place = getNewTempVar()
+					place = TAC.getNewTempVar()
 					ST.addAttribute(p[1]['name'], ST.getCurrentScope(), place)
 			else:
 				ST.addIdentifier(p[1]['name'], p[3]['type'])
-				place = getNewTempVar()
+				place = TAC.getNewTempVar()
 				ST.addAttribute(p[1]['name'], ST.getCurrentScope(), place)
 
 			p[0]['nextlist'] = []
 			try:
 				if isList:
-					emit(ST.getCurrentScope(),place, p[3]['name'], 'ARRAY', '=')
+					TAC.emit(ST.getCurrentScope(),place, p[3]['name'], 'ARRAY', '=')
 				else:
-					emit(ST.getCurrentScope(),place, p[3]['place'], '', '=')
+					TAC.emit(ST.getCurrentScope(),place, p[3]['place'], '', '=')
 			except:		
 				error('Referencel', p)
 
@@ -324,14 +324,14 @@ def p_print_stmt(p):
 	"""
 	p[0] = dict()
 	if len(p)==2:
-		emit(ST.getCurrentScope(), '"\n"', '', 'STRING', 'PRINT')
+		TAC.emit(ST.getCurrentScope(), '"\n"', '', 'STRING', 'PRINT')
 	else:
 		for item in p[2]:
 			itemType = item.get('type')
 			if itemType not in ['STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED']:
 				error('Print', p)
-			emit(ST.getCurrentScope(), item['place'], '', itemType, 'PRINT')
-		emit(ST.getCurrentScope(), '"\n"', '', 'STRING', 'PRINT')
+			TAC.emit(ST.getCurrentScope(), item['place'], '', itemType, 'PRINT')
+		TAC.emit(ST.getCurrentScope(), '"\n"', '', 'STRING', 'PRINT')
 
 
 
@@ -345,30 +345,30 @@ def p_flow_stmt(p):
 					| return_stmt Marker
 	"""
 	p[0] = p[1]
-	backpatch(ST.getCurrentScope(), p[1].get('nextlist', []), p[2]['quad'])
+	TAC.backpatch(ST.getCurrentScope(), p[1].get('nextlist', []), p[2]['quad'])
 
 
 def p_flow_stmt2(p):
 	"""flow_stmt 	: continue_stmt Marker
 	"""
 	p[0] = p[1]
-	backpatch(ST.getCurrentScope(), p[1].get('beginlist', []), p[2]['quad'])
+	TAC.backpatch(ST.getCurrentScope(), p[1].get('beginlist', []), p[2]['quad'])
 
 # break_stmt: 'break'
 def p_break_stmt(p):
 	"""break_stmt 	: BREAK
 	"""
 	p[0] = dict()
-	p[0]['endlist'] = [getNextQuad(ST.getCurrentScope())]
-	emit(ST.getCurrentScope(), '', '', -1, 'GOTO')
+	p[0]['endlist'] = [TAC.getNextQuad(ST.getCurrentScope())]
+	TAC.emit(ST.getCurrentScope(), '', '', -1, 'GOTO')
 
 # continue_stmt: 'continue'
 def p_continue_stmt(p):
 	"""continue_stmt 	: CONTINUE
 	"""
 	p[0] = dict()
-	p[0]['beginlist'] = [getNextQuad(ST.getCurrentScope())]
-	emit(ST.getCurrentScope(), '', '', -1, 'GOTO')
+	p[0]['beginlist'] = [TAC.getNextQuad(ST.getCurrentScope())]
+	TAC.emit(ST.getCurrentScope(), '', '', -1, 'GOTO')
 
 # return_stmt: 'return' [testlist]
 def p_return_stmt(p):
@@ -378,7 +378,7 @@ def p_return_stmt(p):
 	p[0] = dict()
 	if len(p) == 2:
 		ST.addAttributeToCurrentScope('returnType', 'UNDEFINED')
-		emit(ST.getCurrentScope(), '', '', '', 'RETURN')				
+		TAC.emit(ST.getCurrentScope(), '', '', '', 'RETURN')				
 	else:
 		returnType = ST.getAttributeFromCurrentScope('returnType')
 		if returnType == 'UNDEFINED':
@@ -390,7 +390,7 @@ def p_return_stmt(p):
 			error('Type', p)
 		else:
 			pass
-		emit(ST.getCurrentScope(), p[2]['place'], '', '', 'RETURN')
+		TAC.emit(ST.getCurrentScope(), p[2]['place'], '', '', 'RETURN')
 
 # TODO:
 # import_stmt: 'import' NAME
@@ -424,7 +424,7 @@ def p_compound_stmt(p):
 	"""
 	p[0] = p[1]
 	nextlist = p[1].get('nextlist',[])
-	backpatch(ST.getCurrentScope(), nextlist, p[2]['quad'])
+	TAC.backpatch(ST.getCurrentScope(), nextlist, p[2]['quad'])
 
 
 # if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
@@ -440,14 +440,14 @@ def p_if_stmt(p):
 		error('Type', p)
 
 	if len(p) == 6:
-		p[0]['nextlist'] = merge(p[4].get('falselist', []), p[5].get('nextlist', []))
+		p[0]['nextlist'] = TAC.merge(p[4].get('falselist', []), p[5].get('nextlist', []))
 		p[0]['beginlist'] = p[5].get('beginlist', [])
 		p[0]['endlist'] = p[5].get('endlist', [])
 	else:
-		backpatch(ST.getCurrentScope(), p[4]['falselist'], p[8]['quad'])
+		TAC.backpatch(ST.getCurrentScope(), p[4]['falselist'], p[8]['quad'])
 		p[0]['nextlist'] = p[8]['nextlist']
-		p[0]['beginlist'] = merge(p[9].get('beginlist', []), p[5].get('beginlist', []))
-		p[0]['endlist'] = merge(p[9].get('endlist', []), p[5].get('endlist', []))
+		p[0]['beginlist'] = TAC.merge(p[9].get('beginlist', []), p[5].get('beginlist', []))
+		p[0]['endlist'] = TAC.merge(p[9].get('endlist', []), p[5].get('endlist', []))
 
 
 # while_stmt: 'while' test ':' suite
@@ -460,38 +460,38 @@ def p_while_stmt(p):
 	p[0] = dict()
 	p[0]['type'] = 'VOID'
 	p[0]['nextlist'] = []
-	backpatch(ST.getCurrentScope(), p[6]['beginlist'], p[2]['quad'])
-	p[0]['nextlist'] = merge(p[6].get('endlist', []), p[6].get('nextlist', []))
-	p[0]['nextlist'] = merge(p[5].get('falselist', []), p[0].get('nextlist', []))
-	emit(ST.getCurrentScope(),'', '', p[2]['quad'], 'GOTO')
+	TAC.backpatch(ST.getCurrentScope(), p[6]['beginlist'], p[2]['quad'])
+	p[0]['nextlist'] = TAC.merge(p[6].get('endlist', []), p[6].get('nextlist', []))
+	p[0]['nextlist'] = TAC.merge(p[5].get('falselist', []), p[0].get('nextlist', []))
+	TAC.emit(ST.getCurrentScope(),'', '', p[2]['quad'], 'GOTO')
  
 def p_Marker(p):
 	"""Marker 		:	
 	"""
 	p[0] = dict()
-	p[0]['quad'] = getNextQuad(ST.getCurrentScope())
+	p[0]['quad'] = TAC.getNextQuad(ST.getCurrentScope())
 
 def p_MarkerWhile(p):
 	"""MarkerWhile 	:
 	"""
 	p[0] = dict()
-	p[0]['falselist'] = [getNextQuad(ST.getCurrentScope())]
-	emit(ST.getCurrentScope(), p[-2]['place'], 0, -1,'COND_GOTO') 
+	p[0]['falselist'] = [TAC.getNextQuad(ST.getCurrentScope())]
+	TAC.emit(ST.getCurrentScope(), p[-2]['place'], 0, -1,'COND_GOTO') 
 
 def p_MarkerIf(p):
 	"""MarkerIf 	:
 	"""
 	p[0] = dict()
-	p[0]['falselist'] = [getNextQuad(ST.getCurrentScope())]
-	emit(ST.getCurrentScope(), p[-2]['place'], 0, -1, 'COND_GOTO')
+	p[0]['falselist'] = [TAC.getNextQuad(ST.getCurrentScope())]
+	TAC.emit(ST.getCurrentScope(), p[-2]['place'], 0, -1, 'COND_GOTO')
 
 def p_MarkerElse(p):
 	"""MarkerElse 	:
 	"""
 	p[0] = dict()
-	p[0]['nextlist'] = [getNextQuad(ST.getCurrentScope())]
-	emit(ST.getCurrentScope(), '', '', -1, 'GOTO')
-	p[0]['quad'] = getNextQuad(ST.getCurrentScope())
+	p[0]['nextlist'] = [TAC.getNextQuad(ST.getCurrentScope())]
+	TAC.emit(ST.getCurrentScope(), '', '', -1, 'GOTO')
+	p[0]['quad'] = TAC.getNextQuad(ST.getCurrentScope())
 
 
 # for_stmt: 'for' exprlist 'in' testlist ':' suite ['else' ':' suite]
@@ -500,10 +500,10 @@ def p_for_stmt(p):
 	"""for_stmt 	:	FOR atom IN test COLON MarkerFor suite
 	"""
 	p[0] = dict()
-	p[0]['nextlist'] = merge(p[7].get('endlist', []), p[7].get('nextlist', []))
-	p[0]['nextlist'] = merge(p[6].get('falselist', []), p[0].get('nextlist', []))
-	emit(ST.getCurrentScope(), p[6]['index'], p[6]['index'], 1, '+')
-	emit(ST.getCurrentScope(),'', '', p[6]['quad'], 'GOTO')
+	p[0]['nextlist'] = TAC.merge(p[7].get('endlist', []), p[7].get('nextlist', []))
+	p[0]['nextlist'] = TAC.merge(p[6].get('falselist', []), p[0].get('nextlist', []))
+	TAC.emit(ST.getCurrentScope(), p[6]['index'], p[6]['index'], 1, '+')
+	TAC.emit(ST.getCurrentScope(),'', '', p[6]['quad'], 'GOTO')
 
 def p_MarkerFor(p):
 	"""MarkerFor : 
@@ -520,31 +520,31 @@ def p_MarkerFor(p):
 		p[-4]['type'] = p[-2]['type']
 	else:
 		ST.addIdentifier(p[-4]['name'], p[-2]['type'])
-		place = getNewTempVar()
+		place = TAC.getNewTempVar()
 		ST.addAttribute(p[-4]['name'], ST.getCurrentScope(), place)
-	index = getNewTempVar()
-	emit(ST.getCurrentScope(), index, 0, '', '=')
-	array = getNewTempVar()
-	emit(ST.getCurrentScope(), array, p[-2]['place'], 'ARRAY', '=')
+	index = TAC.getNewTempVar()
+	TAC.emit(ST.getCurrentScope(), index, 0, '', '=')
+	array = TAC.getNewTempVar()
+	TAC.emit(ST.getCurrentScope(), array, p[-2]['place'], 'ARRAY', '=')
 	size = len(p[-2]['place'])
-	length = getNewTempVar()
-	emit(ST.getCurrentScope(), length, size, '', '=')
-	condition = getNewTempVar()
-	p[0]['quad'] = getNextQuad(ST.getCurrentScope())
-	emit(ST.getCurrentScope(), condition, index, length, '==')
-	p[0]['falselist'] = [getNextQuad(ST.getCurrentScope())]
-	emit(ST.getCurrentScope(), condition, 1, -1, 'COND_GOTO')
+	length = TAC.getNewTempVar()
+	TAC.emit(ST.getCurrentScope(), length, size, '', '=')
+	condition = TAC.getNewTempVar()
+	p[0]['quad'] = TAC.getNextQuad(ST.getCurrentScope())
+	TAC.emit(ST.getCurrentScope(), condition, index, length, '==')
+	p[0]['falselist'] = [TAC.getNextQuad(ST.getCurrentScope())]
+	TAC.emit(ST.getCurrentScope(), condition, 1, -1, 'COND_GOTO')
 
 	width = ST.getWidthFromType(p[-2]['type'])
 	baseAddr = ST.getBaseAddress(ST.getCurrentScope(), p[-2]['name'])
-	relativeAddr = getNewTempVar()
-	emit(ST.getCurrentScope(), relativeAddr, index, width, '*')
-	absAddr = getNewTempVar()
-	emit(ST.getCurrentScope(), absAddr, baseAddr, relativeAddr, '+')
-	emit(ST.getCurrentScope(), place, absAddr, '', 'LW')
+	relativeAddr = TAC.getNewTempVar()
+	TAC.emit(ST.getCurrentScope(), relativeAddr, index, width, '*')
+	absAddr = TAC.getNewTempVar()
+	TAC.emit(ST.getCurrentScope(), absAddr, baseAddr, relativeAddr, '+')
+	TAC.emit(ST.getCurrentScope(), place, absAddr, '', 'LW')
 
 
-	# emit(ST.getCurrentScope(), place, array+'['+index+']', '', '=')
+	# TAC.emit(ST.getCurrentScope(), place, array+'['+index+']', '', '=')
 	p[0]['index'] = index
 	# suite will add code here
 	# then add GOTO condition check line in for_stmt
@@ -602,9 +602,9 @@ def p_or_test(p):
 		# print p[1]
 		if p[1]['type'] == p[3]['type'] == 'BOOLEAN':
 			p[0] = dict()
-			p[0]['place'] = getNewTempVar()
+			p[0]['place'] = TAC.getNewTempVar()
 			p[0]['type'] = 'BOOLEAN'
-			emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+			TAC.emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
 				error('Reference3', p)
@@ -620,9 +620,9 @@ def p_and_test(p):
 	else:
 		if p[1]['type'] == p[3]['type'] == 'BOOLEAN':
 			p[0] = dict()
-			p[0]['place'] = getNewTempVar()
+			p[0]['place'] = TAC.getNewTempVar()
 			p[0]['type'] = 'BOOLEAN'
-			emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+			TAC.emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
 				error('Reference4', p)
@@ -638,9 +638,9 @@ def p_not_test(p):
 	else:
 		if p[2]['type'] == 'BOOLEAN':
 			p[0] = dict()
-			p[0]['place'] = getNewTempVar()
+			p[0]['place'] = TAC.getNewTempVar()
 			p[0]['type'] = 'BOOLEAN'
-			emit(ST.getCurrentScope(),p[0]['place'], p[2]['place'],'', p[1])
+			TAC.emit(ST.getCurrentScope(),p[0]['place'], p[2]['place'],'', p[1])
 		else:
 			if(p[2]['type']=='REFERENCE_ERROR'):
 				error('Reference5', p)
@@ -664,8 +664,8 @@ def p_comparision(p):
 			error('Type', p)
 		p[0] = dict()
 		p[0]['type'] = 'BOOLEAN'
-		p[0]['place'] = getNewTempVar()
-		emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+		p[0]['place'] = TAC.getNewTempVar()
+		TAC.emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 
 # comp_op: '<'|'>'|'=='|'>='|'<='|'!='|'in'|'not' 'in'|'is'|'is' 'not'
 ## CHANGING GRAMMAR : Withdrawing support of IN and IS
@@ -689,9 +689,9 @@ def p_expr(p):
 	else:
 		if p[1]['type'] == p[3]['type'] == 'NUMBER':
 			p[0] = dict()
-			p[0]['place'] = getNewTempVar()
+			p[0]['place'] = TAC.getNewTempVar()
 			p[0]['type'] = 'NUMBER'
-			emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+			TAC.emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
 				error('Reference7', p)
@@ -707,9 +707,9 @@ def p_xor_expr(p):
 	else:
 		if p[1]['type'] == p[3]['type'] == 'NUMBER':
 			p[0] = dict()
-			p[0]['place'] = getNewTempVar()
+			p[0]['place'] = TAC.getNewTempVar()
 			p[0]['type'] = 'NUMBER'
-			emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+			TAC.emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
 				error('Reference8', p)
@@ -725,9 +725,9 @@ def p_and_expr(p):
 	else:
 		if p[1]['type'] == p[3]['type'] == 'NUMBER':
 			p[0] = dict()
-			p[0]['place'] = getNewTempVar()
+			p[0]['place'] = TAC.getNewTempVar()
 			p[0]['type'] = 'NUMBER'
-			emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+			TAC.emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
 				error('Reference9', p)
@@ -744,9 +744,9 @@ def p_shift_expr(p):
 	else:
 		if p[1]['type'] == p[3]['type'] == 'NUMBER':
 			p[0] = dict()
-			p[0]['place'] = getNewTempVar()
+			p[0]['place'] = TAC.getNewTempVar()
 			p[0]['type'] = 'NUMBER'
-			emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+			TAC.emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
 				error('Referencea', p)
@@ -763,9 +763,9 @@ def p_arith_expr(p):
 	else:
 		if p[1]['type'] in ['NUMBER', 'BOOLEAN', 'UNDEFINED'] and  p[3]['type'] in ['NUMBER', 'BOOLEAN', 'UNDEFINED']:
 			p[0] = dict()
-			p[0]['place'] = getNewTempVar()
+			p[0]['place'] = TAC.getNewTempVar()
 			p[0]['type'] = 'NUMBER'
-			emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+			TAC.emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
 				error('Referenceb', p)
@@ -784,9 +784,9 @@ def p_term(p):
 	else:
 		if p[1]['type'] == p[3]['type'] == 'NUMBER':
 			p[0] = dict()
-			p[0]['place'] = getNewTempVar()
+			p[0]['place'] = TAC.getNewTempVar()
 			p[0]['type'] = 'NUMBER'
-			emit(ST.getCurrentScope(), p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+			TAC.emit(ST.getCurrentScope(), p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
 				error('Referencec', p)
@@ -804,9 +804,9 @@ def p_factor(p):
 		if p[2]['type'] != 'NUMBER':
 			error('Type', p)
 		p[0] = dict()
-		p[0]['place'] = getNewTempVar()
+		p[0]['place'] = TAC.getNewTempVar()
 		p[0]['type'] = 'NUMBER'
-		emit(ST.getCurrentScope(), p[0]['place'], 0, p[2]['place'], '-')
+		TAC.emit(ST.getCurrentScope(), p[0]['place'], 0, p[2]['place'], '-')
 # power: atom trailer*
 def p_power(p):
 	"""power 	: atom
@@ -835,14 +835,14 @@ def p_power(p):
 				# TODO add adtribute to isArray to NAME in symbol table
 				width = ST.getWidthFromType(p[1]['type'])
 				baseAddr = ST.getBaseAddress(ST.getCurrentScope(), p[1]['name'])
-				index = getNewTempVar()
-				emit(ST.getCurrentScope(), index, p[3]['place'], '', '=')
-				relativeAddr = getNewTempVar()
-				emit(ST.getCurrentScope(), relativeAddr, index, width, '*')
-				absAddr = getNewTempVar()
-				emit(ST.getCurrentScope(), absAddr, baseAddr, relativeAddr, '+')
-				value = getNewTempVar()
-				emit(ST.getCurrentScope(), value, absAddr, '', 'LW')
+				index = TAC.getNewTempVar()
+				TAC.emit(ST.getCurrentScope(), index, p[3]['place'], '', '=')
+				relativeAddr = TAC.getNewTempVar()
+				TAC.emit(ST.getCurrentScope(), relativeAddr, index, width, '*')
+				absAddr = TAC.getNewTempVar()
+				TAC.emit(ST.getCurrentScope(), absAddr, baseAddr, relativeAddr, '+')
+				value = TAC.getNewTempVar()
+				TAC.emit(ST.getCurrentScope(), value, absAddr, '', 'LW')
 				p[0]['place'] = value
 				p[0]['absAddr'] = absAddr
 				p[0]['isArray'] = True
@@ -906,12 +906,12 @@ def p_atom5(p):
 	else:
 		p[0] = p[2]
 	p[0]['isList'] = True
-	p[0]['name'] = getNewTempVar()
+	p[0]['name'] = TAC.getNewTempVar()
 	ST.addIdentifier(p[0]['name'], p[0]['type'])
 	ST.addAttribute(p[0]['name'], 'place', p[0]['place'])
 	ST.addAttribute(p[0]['name'], 'isArray', 'True')
 
-	emit(ST.getCurrentScope(), p[0]['name'], p[0]['place'], 'ARRAY', '=')
+	TAC.emit(ST.getCurrentScope(), p[0]['name'], p[0]['place'], 'ARRAY', '=')
 	# print p[0]
 
 def p_atom6(p): 
@@ -978,8 +978,8 @@ def p_stmts(p):
 	"""stmts 	: stmt stmts
 				| stmt Marker"""
 	p[0] = dict()
-	p[0]['beginlist'] = merge(p[1].get('beginlist', []), p[2].get('beginlist', []))
-	p[0]['endlist'] = merge(p[1].get('endlist', []), p[2].get('endlist', []))
+	p[0]['beginlist'] = TAC.merge(p[1].get('beginlist', []), p[2].get('beginlist', []))
+	p[0]['endlist'] = TAC.merge(p[1].get('endlist', []), p[2].get('endlist', []))
 
 def p_error(p):
 	global haltExecution
@@ -1023,7 +1023,7 @@ def initializeTF():
 	ST.addAttribute('False', scopeName, 0)
 
 ST = symbolTable.SymbolTable()
-
+TAC = tac.ThreeAddressCode(ST)
 if __name__=="__main__":
 	initializeTF()	
 	z = G1Parser()

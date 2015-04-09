@@ -1,54 +1,49 @@
-#Code stores array of all three address codes
-code = {'program': []}
-quad = {'program': -1}
-nextQuad = {"program": 0}
+class ThreeAddressCode:
+	def __init__(self, ST):
+		self.code = {'program': []}
+		self.quad = {'program': -1}
+		self.nextQuad = {"program": 0}
 
-tempVarBaseName = "var"
-varCount = 0
+		self.tempVarBaseName = "var"
+		self.varCount = 0
 
-def getNewTempVar():
-	global varCount
-	varCount += 1
-	return tempVarBaseName + str(varCount)
+	def getNewTempVar(self):
+		self.varCount += 1
+		return self.tempVarBaseName + str(self.varCount)
 
-def incrementQuad(functionName):
-	global quad
-	quad[functionName] = nextQuad[functionName]
-	nextQuad[functionName] += 1
-	return quad[functionName]
+	def incrementQuad(self, functionName):
+		self.quad[functionName] = self.nextQuad[functionName]
+		self.nextQuad[functionName] += 1
+		return self.quad[functionName]
 
-def getNextQuad(functionName):
-	return nextQuad[functionName]
+	def getNextQuad(self, functionName):
+		return self.nextQuad[functionName]
 
-def getCodeLength(functionName):
-	return quad[functionName]
+	def getCodeLength(self, functionName):
+		return self.quad[functionName]
 
-def emit(functionName, regDest, regSrc1, regSrc2, op):
-	global code
-	incrementQuad(functionName)
-	code[functionName].append([regDest, regSrc1, regSrc2, op])
+	def emit(self, functionName, regDest, regSrc1, regSrc2, op):
+		self.incrementQuad(functionName)
+		self.code[functionName].append([regDest, regSrc1, regSrc2, op])
 
-def createNewFucntionCode(functionName):
-	global code , quad
-	code[functionName] = []
-	quad[functionName] = -1
-	nextQuad[functionName] = 0
+	def createNewFucntionCode(self, functionName):
+		self.code[functionName] = []
+		self.quad[functionName] = -1
+		self.nextQuad[functionName] = 0
 
-def printCode():
-	for functionName in code.keys():
-		print functionName,":"
-		for i in range(len(code[functionName])):
-			print  "%5d: \t" %i, code[functionName][i]
+	def printCode(self):
+		for functionName in self.code.keys():
+			print functionName,":"
+			for i in range(len(self.code[functionName])):
+				print  "%5d: \t" %i, self.code[functionName][i]
 
-def merge(list1, list2):
-	return list1+list2
+	def merge(self, list1, list2):
+		return list1+list2
 
-def backpatch(functionName, locationList, location):
-	global code
-	for position in locationList:
-		code[functionName][position][2] = location
+	def backpatch(self, functionName, locationList, location):
+		for position in locationList:
+			self.code[functionName][position][2] = location
 
-def noop(functionName, locationList):
-	global code
-	for position in locationList:
-		code[functionName][position][3] = 'NOOP'
+	def noop(self, functionName, locationList):
+		for position in locationList:
+			self.code[functionName][position][3] = 'NOOP'
