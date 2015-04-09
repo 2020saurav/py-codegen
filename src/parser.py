@@ -1023,7 +1023,7 @@ def initializeTF():
 	ST.addAttribute('False', scopeName, 0)
 
 ST = symbolTable.SymbolTable()
-TAC = tac.ThreeAddressCode(ST)
+TAC = tac.ThreeAddressCode()
 if __name__=="__main__":
 	initializeTF()	
 	z = G1Parser()

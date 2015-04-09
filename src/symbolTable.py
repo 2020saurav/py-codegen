@@ -17,6 +17,9 @@ class SymbolTable:
 		self.functionlist = {'program':self.symbolTable['program']}
 		self.scopeStack	= [self.symbolTable["program"]]
 
+		self.addressDescriptor = dict()
+		self.stringCount = 0
+		
 	def lookup(self, identifier):
 		currentScope = len(self.scopeStack)
 		return self.lookupScopeStack(identifier, currentScope - 1)
@@ -114,6 +117,11 @@ class SymbolTable:
 		else :
 			return None 	
 
+	def getFunctionAttribute(self, identifier, key):
+		functionName = self.getAttribute(identifier, 'name')
+		if functionName in self.functionlist:
+			return functionlist[functionName][key]
+
 	def getBaseAddress(self, scopeName, key):
 		return 100
 
@@ -131,6 +139,14 @@ class SymbolTable:
 		else:
 			width = 0
 		return width
+
+	def nameString(self):
+		self.stringCount += 1
+		return "str" + str(self.stringCount)
+
+	def addToStringList(self, label, string):
+		currentScope = self.scopeStack[len(self.scopeStack) - 1]
+		currentScope['stringList'].append([label, string])
 
 	def printSymbolTableHistory(self):
 		print "\n\n SYMBOL TABLE"

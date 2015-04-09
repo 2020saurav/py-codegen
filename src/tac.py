@@ -1,5 +1,5 @@
 class ThreeAddressCode:
-	def __init__(self, ST):
+	def __init__(self):
 		self.code = {'program': []}
 		self.quad = {'program': -1}
 		self.nextQuad = {"program": 0}
