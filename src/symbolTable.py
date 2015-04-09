@@ -19,7 +19,29 @@ class SymbolTable:
 
 		self.addressDescriptor = dict()
 		self.stringCount = 0
-		
+		self.varCount = 0
+
+	def getNewTempVar(self, memLocation='', variable='', loadFromMem=False):
+		self.varCount += 1
+		tempVar = "var" + str(self.varCount)
+		self.addressDescriptor[tempVar] = {
+							'memory'	: None,
+							'register'	: None,
+							'store'		: loadFromMem,
+							'dirty'		: False,
+							'scope'		: self.getCurrentScope(),
+							'variable'	: variable
+						}
+
+		if memLocation != '':
+			self.addressDescriptor[tempVar]['memory'] = memLocation
+		return tempVar	
+	
+	def changeMemLocation(self, tempName, memLocation, variable=''):
+		self.addressDescriptor[tempName]['memory'] = memLocation
+		self.addressDescriptor[tempName]['variable'] = variable
+		self.addressDescriptor[tempName]['scope'] = self.getCurrentScope()
+
 	def lookup(self, identifier):
 		currentScope = len(self.scopeStack)
 		return self.lookupScopeStack(identifier, currentScope - 1)

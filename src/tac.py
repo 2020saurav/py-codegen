@@ -4,12 +4,6 @@ class ThreeAddressCode:
 		self.quad = {'program': -1}
 		self.nextQuad = {"program": 0}
 
-		self.tempVarBaseName = "var"
-		self.varCount = 0
-
-	def getNewTempVar(self):
-		self.varCount += 1
-		return self.tempVarBaseName + str(self.varCount)
 
 	def incrementQuad(self, functionName):
 		self.quad[functionName] = self.nextQuad[functionName]
