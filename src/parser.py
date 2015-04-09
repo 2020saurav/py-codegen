@@ -16,8 +16,8 @@ def p_file_input(p):
 	TAC.emit(ST.getCurrentScope(), '','', -1, 'HALT')
 	ST.addAttributeToCurrentScope('numParam', 0)
 	ST.removeCurrentScope()
-	TAC.printCode()
-	ST.printSymbolTableHistory()
+	# TAC.printCode()
+	# ST.printSymbolTableHistory()
 
 # Our temporary symbol
 def p_single_stmt(p):
@@ -1012,9 +1012,11 @@ class G1Parser(object):
 		self.mlexer = mlexer
 		self.parser = yacc.yacc(start="file_input", debug=True)
 	def parse(self, code):
+		initializeTF()	
 		self.mlexer.input(code)
-		result = self.parser.parse(lexer = self.mlexer, debug=True)
-		return result
+		self.parser.parse(lexer = self.mlexer, debug=True)
+		return ST, TAC
+		
 def initializeTF():
 	scopeName = ST.getCurrentScope()
 	ST.addIdentifier('True', 'BOOLEAN')
@@ -1024,18 +1026,3 @@ def initializeTF():
 
 ST = symbolTable.SymbolTable()
 TAC = tac.ThreeAddressCode()
-if __name__=="__main__":
-	initializeTF()	
-	z = G1Parser()
-	filename = sys.argv[1]
-	# filename = "../test/for.py"
-	sourcefile = open(filename)
-	data = sourcefile.read()
-	sys.stderr = open('dump','w')
-	root =  z.parse(data)
-	sys.stderr.close()
-	# call(["python","converter.py", filename])
-	# s = filename
-	# fname = "../"+s[s.find("/")+1:s.find(".py")]
-	# call(["dot","-Tpng",fname+".dot","-o",fname+".png"])
-	# call(["gnome-open",fname+".png"])
