@@ -5,7 +5,7 @@ tokens = lexer.tokens
 from subprocess import call
 import sys
 from tac import *
-from symbolTable import *
+import symbolTable
 programLineOffset = 0
 haltExecution = False
 # file_input: (NEWLINE | stmt)* ENDMARKER
@@ -13,11 +13,11 @@ def p_file_input(p):
 	"""file_input :	single_stmt ENDMARKER
 	"""
 	p[0] = p[1]
-	emit(getCurrentScope(), '','', -1, 'HALT')
-	addAttributeToCurrentScope('numParam', 0)
-	removeCurrentScope()
+	emit(ST.getCurrentScope(), '','', -1, 'HALT')
+	ST.addAttributeToCurrentScope('numParam', 0)
+	ST.removeCurrentScope()
 	printCode()
-	printSymbolTableHistory()
+	ST.printSymbolTableHistory()
 
 # Our temporary symbol
 def p_single_stmt(p):
@@ -39,10 +39,10 @@ def p_single_stmt1(p):
 def p_funcdef(p):
     """funcdef : DEF NAME MarkerScope parameters MarkerArg COLON suite
     """
-    noop(getCurrentScope(), p[7]['beginlist'])
-    noop(getCurrentScope(), p[7]['endlist'])
-    emit(getCurrentScope(), '', '', '', 'JUMP_RETURN')
-    removeCurrentScope()
+    noop(ST.getCurrentScope(), p[7]['beginlist'])
+    noop(ST.getCurrentScope(), p[7]['endlist'])
+    emit(ST.getCurrentScope(), '', '', '', 'JUMP_RETURN')
+    ST.removeCurrentScope()
     p[0] = dict()
     p[0]['type'] = 'FUNCTION'
     p[0]['name'] = p[3]['name']
@@ -53,28 +53,28 @@ def p_MarkerScope(p):
 	"""
 	p[0] = dict()
 	p[0]['name'] = p[-1]
-	if existsInCurrentScope(p[0]['name']):
+	if ST.existsInCurrentScope(p[0]['name']):
 		error('Redefinition', p[0]['name'])
 	else:
-		addIdentifier(p[0]['name'], 'FUNCTION')
+		ST.addIdentifier(p[0]['name'], 'FUNCTION')
 		place = getNewTempVar()
-		addAttribute(p[0]['name'], getCurrentScope(), place)
-		addAttribute(p[0]['name'], 'name', p[0]['name'])
-		# emit(getCurrentScope(), place, p[0]['name'], '', 'REF')
-		addScope(p[0]['name'])
+		ST.addAttribute(p[0]['name'], ST.getCurrentScope(), place)
+		ST.addAttribute(p[0]['name'], 'name', p[0]['name'])
+		# emit(ST.getCurrentScope(), place, p[0]['name'], '', 'REF')
+		ST.addScope(p[0]['name'])
 		createNewFucntionCode(p[0]['name'])
 
 def p_MarkerArg(p):
 	"""MarkerArg 	:
 	"""
 	for arg in p[-1]:
-		if existsInCurrentScope(arg):
+		if ST.existsInCurrentScope(arg):
 			error('Redefinition', arg)
 		else:
-			addIdentifier(arg, 'UNDEFINED')
+			ST.addIdentifier(arg, 'UNDEFINED')
 			place = getNewTempVar()
-			addAttribute(arg, getCurrentScope(), place)
-	addAttributeToCurrentScope('numParam', len(p[-1]))
+			ST.addAttribute(arg, ST.getCurrentScope(), place)
+	ST.addAttributeToCurrentScope('numParam', len(p[-1]))
 
 # parameters: '(' [varargslist] ')'
 def p_parameters(p):
@@ -91,24 +91,24 @@ def p_function_call(p):
 	"""
 	p[0] = dict()
 	place = ''
-	if not exists(p[1]):
+	if not ST.exists(p[1]):
 		error('Referencei', p[1])
 	else :
-		identifierType = getAttribute(p[1], 'type')
+		identifierType = ST.getAttribute(p[1], 'type')
 		if identifierType == 'FUNCTION':
 			if len(p)==4:
 				pass
 			else:
 				for param in p[3]:
-					emit(getCurrentScope(), param['place'], '', '', 'PARAM')
+					emit(ST.getCurrentScope(), param['place'], '', '', 'PARAM')
 
-			emit(getCurrentScope(), '', '', p[1], 'JUMPLABEL')
-			# fname = getAttribute(p[1], 'name')
+			emit(ST.getCurrentScope(), '', '', p[1], 'JUMPLABEL')
+			# fname = ST.getAttribute(p[1], 'name')
 			fname = p[1]
 			# print fname
-			p[0]['type'] = getAttributeFromFunctionList(fname, 'returnType')
+			p[0]['type'] = ST.getAttributeFromFunctionList(fname, 'returnType')
 			returnPlace = getNewTempVar()
-			emit(getCurrentScope(), returnPlace, '', '', 'FUNCTION_RETURN')
+			emit(ST.getCurrentScope(), returnPlace, '', '', 'FUNCTION_RETURN')
 			p[0]['place'] = returnPlace
 		else :
 			error('Referencej', p[1])
@@ -182,7 +182,7 @@ def p_small_stmt(p):
 					| print_stmt Marker
 	"""
 	p[0] = p[1]
-	backpatch(getCurrentScope(), p[1].get('nextlist', []), p[2]['quad'])
+	backpatch(ST.getCurrentScope(), p[1].get('nextlist', []), p[2]['quad'])
 
 
 # expr_stmt: testlist (augassign testlist | ('=' testlist)*)
@@ -206,39 +206,39 @@ def p_expr_stmt(p):
 			p[3]['isArray']
 			if p[1]['type'] != p[3]['type']:
 				error('Type', p)
-			# width = getWidthFromType(p[1]['type'])
-			# baseAddrLeft = getBaseAddress(getCurrentScope(), p[1]['name'])
+			# width = ST.getWidthFromType(p[1]['type'])
+			# baseAddrLeft = ST.getBaseAddress(ST.getCurrentScope(), p[1]['name'])
 			# indexLeft = getNewTempVar()
-			# emit(getCurrentScope(), indexLeft, p[1]['place'], '', '=')
+			# emit(ST.getCurrentScope(), indexLeft, p[1]['place'], '', '=')
 			# relativeAddrLeft = getNewTempVar()
-			# emit(getCurrentScope(), relativeAddrLeft, indexLeft, width, '*')
+			# emit(ST.getCurrentScope(), relativeAddrLeft, indexLeft, width, '*')
 			absAddrLeft = p[1]['absAddr']
-			# emit(getCurrentScope(), absAddrLeft, baseAddrLeft, relativeAddrLeft, '+')
+			# emit(ST.getCurrentScope(), absAddrLeft, baseAddrLeft, relativeAddrLeft, '+')
 
-			# baseAddrRight = getBaseAddress(getCurrentScope(), p[3]['name'])
+			# baseAddrRight = ST.getBaseAddress(ST.getCurrentScope(), p[3]['name'])
 			# indexRight = getNewTempVar()
-			# emit(getCurrentScope(), indexRight, p[3]['place'], '', '=')
+			# emit(ST.getCurrentScope(), indexRight, p[3]['place'], '', '=')
 			# relativeAddrRight = getNewTempVar()
-			# emit(getCurrentScope(), relativeAddrRight, indexRight, width, '*')
+			# emit(ST.getCurrentScope(), relativeAddrRight, indexRight, width, '*')
 			# absAddrRight = getNewTempVar()
-			# emit(getCurrentScope(), absAddrRight, baseAddrRight, relativeAddrRight, '+')
+			# emit(ST.getCurrentScope(), absAddrRight, baseAddrRight, relativeAddrRight, '+')
 			value = getNewTempVar()
-			emit(getCurrentScope(), value, p[3]['place'], '', '=')
-			emit(getCurrentScope(), absAddrLeft, value, '', 'SW')
+			emit(ST.getCurrentScope(), value, p[3]['place'], '', '=')
+			emit(ST.getCurrentScope(), absAddrLeft, value, '', 'SW')
 		except:
 			# a[i] = x
 			if p[1]['type'] != p[3]['type']:
 				error('Type', p)
-			# width = getWidthFromType(p[1]['type'])
-			# baseAddr = getBaseAddress(getCurrentScope(), p[1]['name'])
+			# width = ST.getWidthFromType(p[1]['type'])
+			# baseAddr = ST.getBaseAddress(ST.getCurrentScope(), p[1]['name'])
 			# index = getNewTempVar()
-			# emit(getCurrentScope(), index, p[1]['place'], '', '=')
+			# emit(ST.getCurrentScope(), index, p[1]['place'], '', '=')
 			# relativeAddr = getNewTempVar()
-			# emit(getCurrentScope(), relativeAddr, index, width, '*')
+			# emit(ST.getCurrentScope(), relativeAddr, index, width, '*')
 			absAddr = p[1]['absAddr']
-			# emit(getCurrentScope(), absAddr, baseAddr, relativeAddr, '+')
+			# emit(ST.getCurrentScope(), absAddr, baseAddr, relativeAddr, '+')
 			try:
-				emit(getCurrentScope(), absAddr, p[3]['place'], '', 'SW')
+				emit(ST.getCurrentScope(), absAddr, p[3]['place'], '', 'SW')
 			except:		
 				error('Referencek', p)
 		
@@ -248,30 +248,30 @@ def p_expr_stmt(p):
 		try:
 			# x = a[i]
 			p[3]['isArray']
-			# width = getWidthFromType(p[3]['type'])
-			# baseAddr = getBaseAddress(getCurrentScope(), p[3]['name'])
+			# width = ST.getWidthFromType(p[3]['type'])
+			# baseAddr = ST.getBaseAddress(ST.getCurrentScope(), p[3]['name'])
 			# index = getNewTempVar()
-			# emit(getCurrentScope(), index, p[3]['place'], '', '=')
+			# emit(ST.getCurrentScope(), index, p[3]['place'], '', '=')
 			# relativeAddr = getNewTempVar()
-			# emit(getCurrentScope(), relativeAddr, index, width, '*')
+			# emit(ST.getCurrentScope(), relativeAddr, index, width, '*')
 			# absAddr = getNewTempVar()
-			# emit(getCurrentScope(), absAddr, baseAddr, relativeAddr, '+')
+			# emit(ST.getCurrentScope(), absAddr, baseAddr, relativeAddr, '+')
 			value = getNewTempVar()
-			emit(getCurrentScope(), value, p[3]['absAddr'], '', 'LW')
+			emit(ST.getCurrentScope(), value, p[3]['absAddr'], '', 'LW')
 
-			if exists(p[1]['name']):
-				addAttribute(p[1]['name'], 'type', p[3]['type'])
-				if existsInCurrentScope(p[1]['name']):
-					place = getAttribute(p[1]['name'], getCurrentScope())
+			if ST.exists(p[1]['name']):
+				ST.addAttribute(p[1]['name'], 'type', p[3]['type'])
+				if ST.existsInCurrentScope(p[1]['name']):
+					place = ST.getAttribute(p[1]['name'], ST.getCurrentScope())
 				else:
 					place = getNewTempVar()
-					addAttribute(p[1]['name'], getCurrentScope(), place)
+					ST.addAttribute(p[1]['name'], ST.getCurrentScope(), place)
 			else:
-				addIdentifier(p[1]['name'], p[3]['type'])
+				ST.addIdentifier(p[1]['name'], p[3]['type'])
 				place = getNewTempVar()
-				addAttribute(p[1]['name'], getCurrentScope(), place)
+				ST.addAttribute(p[1]['name'], ST.getCurrentScope(), place)
 			p[0]['nextlist'] = []
-			emit(getCurrentScope(),place, value, '', '=')
+			emit(ST.getCurrentScope(),place, value, '', '=')
 
 
 		except:
@@ -284,24 +284,24 @@ def p_expr_stmt(p):
 			except:
 				pass
 
-			if exists(p[1]['name']):
-				addAttribute(p[1]['name'], 'type', p[3]['type'])
-				if existsInCurrentScope(p[1]['name']):
-					place = getAttribute(p[1]['name'], getCurrentScope())
+			if ST.exists(p[1]['name']):
+				ST.addAttribute(p[1]['name'], 'type', p[3]['type'])
+				if ST.existsInCurrentScope(p[1]['name']):
+					place = ST.getAttribute(p[1]['name'], ST.getCurrentScope())
 				else:
 					place = getNewTempVar()
-					addAttribute(p[1]['name'], getCurrentScope(), place)
+					ST.addAttribute(p[1]['name'], ST.getCurrentScope(), place)
 			else:
-				addIdentifier(p[1]['name'], p[3]['type'])
+				ST.addIdentifier(p[1]['name'], p[3]['type'])
 				place = getNewTempVar()
-				addAttribute(p[1]['name'], getCurrentScope(), place)
+				ST.addAttribute(p[1]['name'], ST.getCurrentScope(), place)
 
 			p[0]['nextlist'] = []
 			try:
 				if isList:
-					emit(getCurrentScope(),place, p[3]['name'], 'ARRAY', '=')
+					emit(ST.getCurrentScope(),place, p[3]['name'], 'ARRAY', '=')
 				else:
-					emit(getCurrentScope(),place, p[3]['place'], '', '=')
+					emit(ST.getCurrentScope(),place, p[3]['place'], '', '=')
 			except:		
 				error('Referencel', p)
 
@@ -324,14 +324,14 @@ def p_print_stmt(p):
 	"""
 	p[0] = dict()
 	if len(p)==2:
-		emit(getCurrentScope(), '"\n"', '', 'STRING', 'PRINT')
+		emit(ST.getCurrentScope(), '"\n"', '', 'STRING', 'PRINT')
 	else:
 		for item in p[2]:
 			itemType = item.get('type')
 			if itemType not in ['STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED']:
 				error('Print', p)
-			emit(getCurrentScope(), item['place'], '', itemType, 'PRINT')
-		emit(getCurrentScope(), '"\n"', '', 'STRING', 'PRINT')
+			emit(ST.getCurrentScope(), item['place'], '', itemType, 'PRINT')
+		emit(ST.getCurrentScope(), '"\n"', '', 'STRING', 'PRINT')
 
 
 
@@ -345,30 +345,30 @@ def p_flow_stmt(p):
 					| return_stmt Marker
 	"""
 	p[0] = p[1]
-	backpatch(getCurrentScope(), p[1].get('nextlist', []), p[2]['quad'])
+	backpatch(ST.getCurrentScope(), p[1].get('nextlist', []), p[2]['quad'])
 
 
 def p_flow_stmt2(p):
 	"""flow_stmt 	: continue_stmt Marker
 	"""
 	p[0] = p[1]
-	backpatch(getCurrentScope(), p[1].get('beginlist', []), p[2]['quad'])
+	backpatch(ST.getCurrentScope(), p[1].get('beginlist', []), p[2]['quad'])
 
 # break_stmt: 'break'
 def p_break_stmt(p):
 	"""break_stmt 	: BREAK
 	"""
 	p[0] = dict()
-	p[0]['endlist'] = [getNextQuad(getCurrentScope())]
-	emit(getCurrentScope(), '', '', -1, 'GOTO')
+	p[0]['endlist'] = [getNextQuad(ST.getCurrentScope())]
+	emit(ST.getCurrentScope(), '', '', -1, 'GOTO')
 
 # continue_stmt: 'continue'
 def p_continue_stmt(p):
 	"""continue_stmt 	: CONTINUE
 	"""
 	p[0] = dict()
-	p[0]['beginlist'] = [getNextQuad(getCurrentScope())]
-	emit(getCurrentScope(), '', '', -1, 'GOTO')
+	p[0]['beginlist'] = [getNextQuad(ST.getCurrentScope())]
+	emit(ST.getCurrentScope(), '', '', -1, 'GOTO')
 
 # return_stmt: 'return' [testlist]
 def p_return_stmt(p):
@@ -377,20 +377,20 @@ def p_return_stmt(p):
 	"""
 	p[0] = dict()
 	if len(p) == 2:
-		addAttributeToCurrentScope('returnType', 'UNDEFINED')
-		emit(getCurrentScope(), '', '', '', 'RETURN')				
+		ST.addAttributeToCurrentScope('returnType', 'UNDEFINED')
+		emit(ST.getCurrentScope(), '', '', '', 'RETURN')				
 	else:
-		returnType = getAttributeFromCurrentScope('returnType')
+		returnType = ST.getAttributeFromCurrentScope('returnType')
 		if returnType == 'UNDEFINED':
 			if p[2]['type'] == 'FUNCTION':
-				addAttributeToCurrentScope('returnType', 'UNDEFINED')
+				ST.addAttributeToCurrentScope('returnType', 'UNDEFINED')
 			else:
-				addAttributeToCurrentScope('returnType', p[2]['type'])
+				ST.addAttributeToCurrentScope('returnType', p[2]['type'])
 		elif p[2]['type'] != returnType:
 			error('Type', p)
 		else:
 			pass
-		emit(getCurrentScope(), p[2]['place'], '', '', 'RETURN')
+		emit(ST.getCurrentScope(), p[2]['place'], '', '', 'RETURN')
 
 # TODO:
 # import_stmt: 'import' NAME
@@ -424,7 +424,7 @@ def p_compound_stmt(p):
 	"""
 	p[0] = p[1]
 	nextlist = p[1].get('nextlist',[])
-	backpatch(getCurrentScope(), nextlist, p[2]['quad'])
+	backpatch(ST.getCurrentScope(), nextlist, p[2]['quad'])
 
 
 # if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
@@ -444,7 +444,7 @@ def p_if_stmt(p):
 		p[0]['beginlist'] = p[5].get('beginlist', [])
 		p[0]['endlist'] = p[5].get('endlist', [])
 	else:
-		backpatch(getCurrentScope(), p[4]['falselist'], p[8]['quad'])
+		backpatch(ST.getCurrentScope(), p[4]['falselist'], p[8]['quad'])
 		p[0]['nextlist'] = p[8]['nextlist']
 		p[0]['beginlist'] = merge(p[9].get('beginlist', []), p[5].get('beginlist', []))
 		p[0]['endlist'] = merge(p[9].get('endlist', []), p[5].get('endlist', []))
@@ -460,38 +460,38 @@ def p_while_stmt(p):
 	p[0] = dict()
 	p[0]['type'] = 'VOID'
 	p[0]['nextlist'] = []
-	backpatch(getCurrentScope(), p[6]['beginlist'], p[2]['quad'])
+	backpatch(ST.getCurrentScope(), p[6]['beginlist'], p[2]['quad'])
 	p[0]['nextlist'] = merge(p[6].get('endlist', []), p[6].get('nextlist', []))
 	p[0]['nextlist'] = merge(p[5].get('falselist', []), p[0].get('nextlist', []))
-	emit(getCurrentScope(),'', '', p[2]['quad'], 'GOTO')
+	emit(ST.getCurrentScope(),'', '', p[2]['quad'], 'GOTO')
  
 def p_Marker(p):
 	"""Marker 		:	
 	"""
 	p[0] = dict()
-	p[0]['quad'] = getNextQuad(getCurrentScope())
+	p[0]['quad'] = getNextQuad(ST.getCurrentScope())
 
 def p_MarkerWhile(p):
 	"""MarkerWhile 	:
 	"""
 	p[0] = dict()
-	p[0]['falselist'] = [getNextQuad(getCurrentScope())]
-	emit(getCurrentScope(), p[-2]['place'], 0, -1,'COND_GOTO') 
+	p[0]['falselist'] = [getNextQuad(ST.getCurrentScope())]
+	emit(ST.getCurrentScope(), p[-2]['place'], 0, -1,'COND_GOTO') 
 
 def p_MarkerIf(p):
 	"""MarkerIf 	:
 	"""
 	p[0] = dict()
-	p[0]['falselist'] = [getNextQuad(getCurrentScope())]
-	emit(getCurrentScope(), p[-2]['place'], 0, -1, 'COND_GOTO')
+	p[0]['falselist'] = [getNextQuad(ST.getCurrentScope())]
+	emit(ST.getCurrentScope(), p[-2]['place'], 0, -1, 'COND_GOTO')
 
 def p_MarkerElse(p):
 	"""MarkerElse 	:
 	"""
 	p[0] = dict()
-	p[0]['nextlist'] = [getNextQuad(getCurrentScope())]
-	emit(getCurrentScope(), '', '', -1, 'GOTO')
-	p[0]['quad'] = getNextQuad(getCurrentScope())
+	p[0]['nextlist'] = [getNextQuad(ST.getCurrentScope())]
+	emit(ST.getCurrentScope(), '', '', -1, 'GOTO')
+	p[0]['quad'] = getNextQuad(ST.getCurrentScope())
 
 
 # for_stmt: 'for' exprlist 'in' testlist ':' suite ['else' ':' suite]
@@ -502,8 +502,8 @@ def p_for_stmt(p):
 	p[0] = dict()
 	p[0]['nextlist'] = merge(p[7].get('endlist', []), p[7].get('nextlist', []))
 	p[0]['nextlist'] = merge(p[6].get('falselist', []), p[0].get('nextlist', []))
-	emit(getCurrentScope(), p[6]['index'], p[6]['index'], 1, '+')
-	emit(getCurrentScope(),'', '', p[6]['quad'], 'GOTO')
+	emit(ST.getCurrentScope(), p[6]['index'], p[6]['index'], 1, '+')
+	emit(ST.getCurrentScope(),'', '', p[6]['quad'], 'GOTO')
 
 def p_MarkerFor(p):
 	"""MarkerFor : 
@@ -515,36 +515,36 @@ def p_MarkerFor(p):
 		p[-2]['isList']
 	except:
 		error('Not an array', p[-2])
-	if exists(p[-4]['name']):
+	if ST.exists(p[-4]['name']):
 		place = p[-4]['place']
 		p[-4]['type'] = p[-2]['type']
 	else:
-		addIdentifier(p[-4]['name'], p[-2]['type'])
+		ST.addIdentifier(p[-4]['name'], p[-2]['type'])
 		place = getNewTempVar()
-		addAttribute(p[-4]['name'], getCurrentScope(), place)
+		ST.addAttribute(p[-4]['name'], ST.getCurrentScope(), place)
 	index = getNewTempVar()
-	emit(getCurrentScope(), index, 0, '', '=')
+	emit(ST.getCurrentScope(), index, 0, '', '=')
 	array = getNewTempVar()
-	emit(getCurrentScope(), array, p[-2]['place'], 'ARRAY', '=')
+	emit(ST.getCurrentScope(), array, p[-2]['place'], 'ARRAY', '=')
 	size = len(p[-2]['place'])
 	length = getNewTempVar()
-	emit(getCurrentScope(), length, size, '', '=')
+	emit(ST.getCurrentScope(), length, size, '', '=')
 	condition = getNewTempVar()
-	p[0]['quad'] = getNextQuad(getCurrentScope())
-	emit(getCurrentScope(), condition, index, length, '==')
-	p[0]['falselist'] = [getNextQuad(getCurrentScope())]
-	emit(getCurrentScope(), condition, 1, -1, 'COND_GOTO')
+	p[0]['quad'] = getNextQuad(ST.getCurrentScope())
+	emit(ST.getCurrentScope(), condition, index, length, '==')
+	p[0]['falselist'] = [getNextQuad(ST.getCurrentScope())]
+	emit(ST.getCurrentScope(), condition, 1, -1, 'COND_GOTO')
 
-	width = getWidthFromType(p[-2]['type'])
-	baseAddr = getBaseAddress(getCurrentScope(), p[-2]['name'])
+	width = ST.getWidthFromType(p[-2]['type'])
+	baseAddr = ST.getBaseAddress(ST.getCurrentScope(), p[-2]['name'])
 	relativeAddr = getNewTempVar()
-	emit(getCurrentScope(), relativeAddr, index, width, '*')
+	emit(ST.getCurrentScope(), relativeAddr, index, width, '*')
 	absAddr = getNewTempVar()
-	emit(getCurrentScope(), absAddr, baseAddr, relativeAddr, '+')
-	emit(getCurrentScope(), place, absAddr, '', 'LW')
+	emit(ST.getCurrentScope(), absAddr, baseAddr, relativeAddr, '+')
+	emit(ST.getCurrentScope(), place, absAddr, '', 'LW')
 
 
-	# emit(getCurrentScope(), place, array+'['+index+']', '', '=')
+	# emit(ST.getCurrentScope(), place, array+'['+index+']', '', '=')
 	p[0]['index'] = index
 	# suite will add code here
 	# then add GOTO condition check line in for_stmt
@@ -604,7 +604,7 @@ def p_or_test(p):
 			p[0] = dict()
 			p[0]['place'] = getNewTempVar()
 			p[0]['type'] = 'BOOLEAN'
-			emit(getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+			emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
 				error('Reference3', p)
@@ -622,7 +622,7 @@ def p_and_test(p):
 			p[0] = dict()
 			p[0]['place'] = getNewTempVar()
 			p[0]['type'] = 'BOOLEAN'
-			emit(getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+			emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
 				error('Reference4', p)
@@ -640,7 +640,7 @@ def p_not_test(p):
 			p[0] = dict()
 			p[0]['place'] = getNewTempVar()
 			p[0]['type'] = 'BOOLEAN'
-			emit(getCurrentScope(),p[0]['place'], p[2]['place'],'', p[1])
+			emit(ST.getCurrentScope(),p[0]['place'], p[2]['place'],'', p[1])
 		else:
 			if(p[2]['type']=='REFERENCE_ERROR'):
 				error('Reference5', p)
@@ -665,7 +665,7 @@ def p_comparision(p):
 		p[0] = dict()
 		p[0]['type'] = 'BOOLEAN'
 		p[0]['place'] = getNewTempVar()
-		emit(getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+		emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 
 # comp_op: '<'|'>'|'=='|'>='|'<='|'!='|'in'|'not' 'in'|'is'|'is' 'not'
 ## CHANGING GRAMMAR : Withdrawing support of IN and IS
@@ -691,7 +691,7 @@ def p_expr(p):
 			p[0] = dict()
 			p[0]['place'] = getNewTempVar()
 			p[0]['type'] = 'NUMBER'
-			emit(getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+			emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
 				error('Reference7', p)
@@ -709,7 +709,7 @@ def p_xor_expr(p):
 			p[0] = dict()
 			p[0]['place'] = getNewTempVar()
 			p[0]['type'] = 'NUMBER'
-			emit(getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+			emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
 				error('Reference8', p)
@@ -727,7 +727,7 @@ def p_and_expr(p):
 			p[0] = dict()
 			p[0]['place'] = getNewTempVar()
 			p[0]['type'] = 'NUMBER'
-			emit(getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+			emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
 				error('Reference9', p)
@@ -746,7 +746,7 @@ def p_shift_expr(p):
 			p[0] = dict()
 			p[0]['place'] = getNewTempVar()
 			p[0]['type'] = 'NUMBER'
-			emit(getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+			emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
 				error('Referencea', p)
@@ -765,7 +765,7 @@ def p_arith_expr(p):
 			p[0] = dict()
 			p[0]['place'] = getNewTempVar()
 			p[0]['type'] = 'NUMBER'
-			emit(getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+			emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
 				error('Referenceb', p)
@@ -786,7 +786,7 @@ def p_term(p):
 			p[0] = dict()
 			p[0]['place'] = getNewTempVar()
 			p[0]['type'] = 'NUMBER'
-			emit(getCurrentScope(), p[0]['place'], p[1]['place'], p[3]['place'], p[2])
+			emit(ST.getCurrentScope(), p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
 				error('Referencec', p)
@@ -806,7 +806,7 @@ def p_factor(p):
 		p[0] = dict()
 		p[0]['place'] = getNewTempVar()
 		p[0]['type'] = 'NUMBER'
-		emit(getCurrentScope(), p[0]['place'], 0, p[2]['place'], '-')
+		emit(ST.getCurrentScope(), p[0]['place'], 0, p[2]['place'], '-')
 # power: atom trailer*
 def p_power(p):
 	"""power 	: atom
@@ -833,16 +833,16 @@ def p_power(p):
 			try:
 				# p[1]['isArray']
 				# TODO add adtribute to isArray to NAME in symbol table
-				width = getWidthFromType(p[1]['type'])
-				baseAddr = getBaseAddress(getCurrentScope(), p[1]['name'])
+				width = ST.getWidthFromType(p[1]['type'])
+				baseAddr = ST.getBaseAddress(ST.getCurrentScope(), p[1]['name'])
 				index = getNewTempVar()
-				emit(getCurrentScope(), index, p[3]['place'], '', '=')
+				emit(ST.getCurrentScope(), index, p[3]['place'], '', '=')
 				relativeAddr = getNewTempVar()
-				emit(getCurrentScope(), relativeAddr, index, width, '*')
+				emit(ST.getCurrentScope(), relativeAddr, index, width, '*')
 				absAddr = getNewTempVar()
-				emit(getCurrentScope(), absAddr, baseAddr, relativeAddr, '+')
+				emit(ST.getCurrentScope(), absAddr, baseAddr, relativeAddr, '+')
 				value = getNewTempVar()
-				emit(getCurrentScope(), value, absAddr, '', 'LW')
+				emit(ST.getCurrentScope(), value, absAddr, '', 'LW')
 				p[0]['place'] = value
 				p[0]['absAddr'] = absAddr
 				p[0]['isArray'] = True
@@ -856,13 +856,13 @@ def p_atom1(p):
 	'''
 	p[0] = dict()
 	# p[0]['place'] = p[1]
-	if exists(p[1]):
+	if ST.exists(p[1]):
 		p[0]['name'] = p[1]
-		p[0]['type'] = getAttribute(p[1], 'type')
-		p[0]['place'] = getAttribute(p[1], getCurrentScope())
+		p[0]['type'] = ST.getAttribute(p[1], 'type')
+		p[0]['place'] = ST.getAttribute(p[1], ST.getCurrentScope())
 		p[0]['isIdentifier'] = True
 		try:
-			p[0]['isList'] = getAttribute(p[1], 'isList')
+			p[0]['isList'] = ST.getAttribute(p[1], 'isList')
 		except:
 			pass
 		# TODO may need to add more keys like offset and scopename
@@ -907,11 +907,11 @@ def p_atom5(p):
 		p[0] = p[2]
 	p[0]['isList'] = True
 	p[0]['name'] = getNewTempVar()
-	addIdentifier(p[0]['name'], p[0]['type'])
-	addAttribute(p[0]['name'], 'place', p[0]['place'])
-	addAttribute(p[0]['name'], 'isArray', 'True')
+	ST.addIdentifier(p[0]['name'], p[0]['type'])
+	ST.addAttribute(p[0]['name'], 'place', p[0]['place'])
+	ST.addAttribute(p[0]['name'], 'isArray', 'True')
 
-	emit(getCurrentScope(), p[0]['name'], p[0]['place'], 'ARRAY', '=')
+	emit(ST.getCurrentScope(), p[0]['name'], p[0]['place'], 'ARRAY', '=')
 	# print p[0]
 
 def p_atom6(p): 
@@ -1016,11 +1016,13 @@ class G1Parser(object):
 		result = self.parser.parse(lexer = self.mlexer, debug=True)
 		return result
 def initializeTF():
-	scopeName = getCurrentScope()
-	addIdentifier('True', 'BOOLEAN')
-	addAttribute('True', scopeName, 1)
-	addIdentifier('False', 'BOOLEAN')
-	addAttribute('False', scopeName, 0)
+	scopeName = ST.getCurrentScope()
+	ST.addIdentifier('True', 'BOOLEAN')
+	ST.addAttribute('True', scopeName, 1)
+	ST.addIdentifier('False', 'BOOLEAN')
+	ST.addAttribute('False', scopeName, 0)
+
+ST = symbolTable.SymbolTable()
 
 if __name__=="__main__":
 	initializeTF()	
