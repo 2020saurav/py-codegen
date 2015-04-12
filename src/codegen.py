@@ -6,7 +6,8 @@ def generateMIPSCode(code):
 	sys.stderr = open('dump','w')
 	ST, TAC = z.parse(code)
 	sys.stderr.close()
-	# TAC.printCode()
+	TAC.printCode()
+	# ST.printSymbolTableHistory()
 	# TODO write here. 
 	# TODO some getNewTempVars in parser.py need args
 	# TODO may need helper functions for Run Time Env
