@@ -3,9 +3,11 @@ import parser
 import sys
 import runTimeCode
 
-filename = "../test/assignment.py"
+filename = "../test/while.py"
+RTC = {}
 
 def generateMIPSCode(code):
+	global RTC
 	sys.stderr = open('dump','w')
 	ST, TAC = z.parse(code)
 	# sys.stderr.close()
@@ -86,149 +88,86 @@ def generateMIPSCode(code):
 		for line in TAC.code[function]:
 			if line[3] == 'JUMPLABEL':
 				counter = 0 ;
-				reg = RTC.getRegister(line[2])
-				RTC.addLineToCode(['jal', reg, '', ''])
+				RTC.addLineToCode(['jal', RTC.getRegister(line[2]), '', ''])
 				RTC.reloadParents(ST.getAttributeFromFunctionList(function, 'scopeLevel'), function)
 
 			elif line[3] == 'JUMPBACK':
 				RTC.addLineToCode(['b', function + 'end', '', ''])
 
 			elif line[3] == 'PARAM':
-				reg = RTC.getRegister(line[0])
-				RTC.addLineToCode(['move', '$a'+str(counter), reg,''])
+				RTC.addLineToCode(['move', '$a'+str(counter), RTC.getRegister(line[0]),''])
 				counter = counter +1 ;
 
 			elif line[3] == '=':
-				reg1 = RTC.getRegister(line[0])
-				reg2 = RTC.getRegister(line[1])
-				RTC.addLineToCode(['move', reg1, reg2, ''])
-
+				RTC.addLineToCode(['move', RTC.getRegister(line[0]), RTC.getRegister(line[1]), ''])
 				RTC.flushTemporary(line[0])
 
 			elif line[3] == '=i':
-				reg = RTC.getRegister(line[0])
-				RTC.addLineToCode(['li', reg, line[1], ''])
-
+				RTC.addLineToCode(['li', RTC.getRegister(line[0]), line[1], ''])
 				RTC.flushTemporary(line[0])
 
 			elif line[3] == '=REF':
-				reg = RTC.getRegister(line[0])
-				RTC.addLineToCode(['la', reg, line[1], ''])
-
-				RTC.flushTemporary(line[0])
-
-			elif line[3] == 'uni-':
-				reg1 = RTC.getRegister(line[0])
-				reg2 = RTC.getRegister(line[1])
-				RTC.addLineToCode(['neg', reg1, reg2, ''])
-
+				RTC.addLineToCode(['la', RTC.getRegister(line[0]), line[1], ''])
 				RTC.flushTemporary(line[0])
 
 			elif line[3] == '+':
-				reg1 = RTC.getRegister(line[0])
-				reg2 = RTC.getRegister(line[1])
-				reg3 = RTC.getRegister(line[2])
-				RTC.addLineToCode(['add', reg1, reg2, reg3])
-
+				RTC.addLineToCode(['add', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
 				RTC.flushTemporary(line[0])
 
 			elif line[3] == '-':
-				reg1 = RTC.getRegister(line[0])
-				reg2 = RTC.getRegister(line[1])
-				reg3 = RTC.getRegister(line[2])
-				RTC.addLineToCode(['sub', reg1, reg2, reg3])
-
+				RTC.addLineToCode(['sub', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
 				RTC.flushTemporary(line[0])
 
 			elif line[3] == '*':
-				reg1 = RTC.getRegister(line[1])
-				reg2 = RTC.getRegister(line[2])
-				reg3 = RTC.getRegister(line[0])
-				RTC.addLineToCode(['mult', reg1, reg2,''])
-				RTC.addLineToCode(['mflo', reg3,'',''])
-
+				RTC.addLineToCode(['mult', RTC.getRegister(line[1]), RTC.getRegister(line[2]),''])
+				RTC.addLineToCode(['mflo', RTC.getRegister(line[0]),'',''])
 				RTC.flushTemporary(line[0])
 
 			elif line[3] == '/':
-				reg1 = RTC.getRegister(line[1])
-				reg2 = RTC.getRegister(line[2])
-				reg3 = RTC.getRegister(line[0])
-				RTC.addLineToCode(['div', reg1, reg2, ''])
-				RTC.addLineToCode(['mflo', reg3, '', ''])
-
+				RTC.addLineToCode(['div', RTC.getRegister(line[1]), RTC.getRegister(line[2]), ''])
+				RTC.addLineToCode(['mflo', RTC.getRegister(line[0]), '', ''])
 				RTC.flushTemporary(line[0])
 
 			elif line[3] == '%':
-				reg1 = RTC.getRegister(line[1])
-				reg2 = RTC.getRegister(line[2])
-				reg3 = RTC.getRegister(line[0])
-				RTC.addLineToCode(['div', reg1, reg2, ''])
-				RTC.addLineToCode(['mfhi', reg3, '', ''])
-
+				RTC.addLineToCode(['div', RTC.getRegister(line[1]), RTC.getRegister(line[2]), ''])
+				RTC.addLineToCode(['mfhi', RTC.getRegister(line[0]), '', ''])
 				RTC.flushTemporary(line[0])
 
 			elif line[3] == '<':
-				reg1 = RTC.getRegister(line[0])
-				reg2 = RTC.getRegister(line[1])
-				reg3 = RTC.getRegister(line[2])
-				RTC.addLineToCode(['slt', reg1, reg2, reg3])
-
+				RTC.addLineToCode(['slt', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
 				RTC.flushTemporary(line[0])
 
 			elif line[3] == '>':
-				reg1 = RTC.getRegister(line[0])
-				reg2 = RTC.getRegister(line[1])
-				reg3 = RTC.getRegister(line[2])
-				RTC.addLineToCode(['sgt', reg1, reg2, reg3])
-
+				RTC.addLineToCode(['sgt', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
 				RTC.flushTemporary(line[0])
 
 			elif line[3] == '<=':
-				reg1 = RTC.getRegister(line[0])
-				reg2 = RTC.getRegister(line[1])
-				reg3 = RTC.getRegister(line[2])
-				RTC.addLineToCode(['sle', reg1, reg2, reg3])
-
+				RTC.addLineToCode(['sle', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
 				RTC.flushTemporary(line[0])
 
 			elif line[3] == '>=':
-				reg1 = RTC.getRegister(line[0])
-				reg2 = RTC.getRegister(line[1])
-				reg3 = RTC.getRegister(line[2])
-				RTC.addLineToCode(['sge', reg1, reg2, reg3])
-
+				RTC.addLineToCode(['sge', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
 				RTC.flushTemporary(line[0])
 
 			elif line[3] == '==':
-				reg1 = RTC.getRegister(line[0])
-				reg2 = RTC.getRegister(line[1])
-				reg3 = RTC.getRegister(line[2])
-				RTC.addLineToCode(['seq', reg1, reg2, reg3])
-
+				RTC.addLineToCode(['seq', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
 				RTC.flushTemporary(line[0])
 
 			elif line[3] == '!=':
-				reg1 = RTC.getRegister(line[0])
-				reg2 = RTC.getRegister(line[1])
-				reg3 = RTC.getRegister(line[2])
-				RTC.addLineToCode(['sne', reg1, reg2, reg3])
-
+				RTC.addLineToCode(['sne', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
 				RTC.flushTemporary(line[0])
 
 			elif line[3] == 'COND_GOTO':
-				reg1 = RTC.getRegister(line[0])
-				RTC.addLineToCode(['beq', reg1, '$0', line[2]])
+				RTC.addLineToCode(['beq', RTC.getRegister(line[0]), '$0', line[2]])
 
 			elif line[3] == 'GOTO':
 				RTC.addLineToCode(['b', line[2], '', ''])
 
 			elif line[3] == 'FUNCTION_RETURN':
-				reg1 = RTC.getRegister(line[0])
-				RTC.addLineToCode(['move', reg1, '$v0', ''])
+				RTC.addLineToCode(['move', RTC.getRegister(line[0]), '$v0', ''])
 
 			elif line[3] == 'RETURN':
-				reg1 = RTC.getRegister(line[0])
-				RTC.addLineToCode(['move', '$v0', reg1, ''])
+				RTC.addLineToCode(['move', '$v0', RTC.getRegister(line[0]), ''])
 				RTC.addLineToCode(['b', function + 'end', '', ''])
 
 			elif line[3] == 'HALT':
@@ -241,8 +180,7 @@ def generateMIPSCode(code):
 				RTC.addLineToCode(['jal', 'print_undefined', '', ''])
 
 			elif line[3] == 'PRINT':
-				reg = RTC.getRegister(line[0])
-				RTC.addLineToCode(['move', '$a0', reg, ''])
+				RTC.addLineToCode(['move', '$a0', RTC.getRegister(line[0]), ''])
 
 				if line[2] == 'NUMBER':
 					RTC.addLineToCode(['jal', 'print_integer', '', ''])

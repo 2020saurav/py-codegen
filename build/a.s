@@ -11,9 +11,9 @@ main:
 	la		$fp,	200($sp)
 	la		$s5,	__display__
 	lw		$s7,	0($s5)
-	la		$v0,	-12($sp)
+	la		$v0,	-8($sp)
 	sw		$v0,	0($s5)
-	li		$v0,	12
+	li		$v0,	8
 	sub		$sp,	$sp,	$v0
 	li		$t4,	10
 	la		$s5,	__display__
@@ -27,18 +27,8 @@ main:
 	add		$s6,	$s6,	$s6
 	add		$s7,	$s5,	$s6
 	sw		$t4,	0($s7)
-	li		$t4,	20
-	la		$s5,	__display__
-	li		$s6,	0
-	add		$s6,	$s6,	$s6
-	add		$s6,	$s6,	$s6
-	add		$s7,	$s5,	$s6
-	lw		$s5,	0($s7)
-	li		$s6,	4
-	add		$s6,	$s6,	$s6
-	add		$s6,	$s6,	$s6
-	add		$s7,	$s5,	$s6
-	sw		$t4,	0($s7)
+label1:
+	li		$t4,	0
 	la		$s5,	__display__
 	li		$s6,	0
 	add		$s6,	$s6,	$s6
@@ -46,52 +36,38 @@ main:
 	add		$s7,	$s5,	$s6
 	lw		$s5,	0($s7)
 	li		$s6,	0
-	add		$s6,	$s6,	$s6
-	add		$s6,	$s6,	$s6
-	add		$s7,	$s5,	$s6
-	lw		$t4,	0($s7)
-	move		$a0,	$t4
-	jal		print_integer
-	la		$s5,	__display__
-	li		$s6,	0
-	add		$s6,	$s6,	$s6
-	add		$s6,	$s6,	$s6
-	add		$s7,	$s5,	$s6
-	lw		$s5,	0($s7)
-	li		$s6,	4
 	add		$s6,	$s6,	$s6
 	add		$s6,	$s6,	$s6
 	add		$s7,	$s5,	$s6
 	lw		$t5,	0($s7)
-	move		$a0,	$t5
-	jal		print_integer
-	add		$t6,	$t4,	$t5
+	sgt		$t4,	$t5,	$t6
+	beq		$t4,	$0,	label0
+	li		$t7,	1
+	sub		$t7,	$t5,	$t0
 	la		$s5,	__display__
 	li		$s6,	0
 	add		$s6,	$s6,	$s6
 	add		$s6,	$s6,	$s6
 	add		$s7,	$s5,	$s6
 	lw		$s5,	0($s7)
-	li		$s6,	8
+	li		$s6,	4
 	add		$s6,	$s6,	$s6
 	add		$s6,	$s6,	$s6
 	add		$s7,	$s5,	$s6
-	sw		$t6,	0($s7)
+	sw		$t7,	0($s7)
 	la		$s5,	__display__
 	li		$s6,	0
 	add		$s6,	$s6,	$s6
 	add		$s6,	$s6,	$s6
 	add		$s7,	$s5,	$s6
 	lw		$s5,	0($s7)
-	li		$s6,	8
+	li		$s6,	4
 	add		$s6,	$s6,	$s6
 	add		$s6,	$s6,	$s6
 	add		$s7,	$s5,	$s6
-	lw		$t6,	0($s7)
-	move		$a0,	$t6
+	lw		$t7,	0($s7)
+	move		$a0,	$t7
 	jal		print_integer
-	mult		$t4,	$t6
-	mflo		$t7
 	move		$t5,	$t7
 	la		$s5,	__display__
 	li		$s6,	0
@@ -99,51 +75,13 @@ main:
 	add		$s6,	$s6,	$s6
 	add		$s7,	$s5,	$s6
 	lw		$s5,	0($s7)
-	li		$s6,	4
+	li		$s6,	0
 	add		$s6,	$s6,	$s6
 	add		$s6,	$s6,	$s6
 	add		$s7,	$s5,	$s6
 	sw		$t5,	0($s7)
-	la		$s5,	__display__
-	li		$s6,	0
-	add		$s6,	$s6,	$s6
-	add		$s6,	$s6,	$s6
-	add		$s7,	$s5,	$s6
-	lw		$s5,	0($s7)
-	li		$s6,	4
-	add		$s6,	$s6,	$s6
-	add		$s6,	$s6,	$s6
-	add		$s7,	$s5,	$s6
-	lw		$t5,	0($s7)
-	move		$a0,	$t5
-	jal		print_integer
-	mult		$t5,	$t5
-	mflo		$t0
-	move		$t5,	$t0
-	la		$s5,	__display__
-	li		$s6,	0
-	add		$s6,	$s6,	$s6
-	add		$s6,	$s6,	$s6
-	add		$s7,	$s5,	$s6
-	lw		$s5,	0($s7)
-	li		$s6,	4
-	add		$s6,	$s6,	$s6
-	add		$s6,	$s6,	$s6
-	add		$s7,	$s5,	$s6
-	sw		$t5,	0($s7)
-	la		$s5,	__display__
-	li		$s6,	0
-	add		$s6,	$s6,	$s6
-	add		$s6,	$s6,	$s6
-	add		$s7,	$s5,	$s6
-	lw		$s5,	0($s7)
-	li		$s6,	4
-	add		$s6,	$s6,	$s6
-	add		$s6,	$s6,	$s6
-	add		$s7,	$s5,	$s6
-	lw		$t5,	0($s7)
-	move		$a0,	$t5
-	jal		print_integer
+	b		label1
+label0:
 	jal		exit
 exit:
 	li 		$v0, 10
