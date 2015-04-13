@@ -1,8 +1,8 @@
 class ThreeAddressCode:
 	def __init__(self):
-		self.code = {'program': []}
-		self.quad = {'program': -1}
-		self.nextQuad = {"program": 0}
+		self.code = {'main': []}
+		self.quad = {'main': -1}
+		self.nextQuad = {"main": 0}
 
 
 	def incrementQuad(self, functionName):

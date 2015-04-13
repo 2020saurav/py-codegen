@@ -266,20 +266,28 @@ def p_expr_stmt(p):
 					offset = ST.getAttribute(p[1]['name'], 'offset')
 					place = ST.getNewTempVar((level, offset), p[1]['name'])
 					ST.addAttribute(p[1]['name'], ST.getCurrentScope(), place)
+				TAC.emit(ST.getCurrentScope(), place, p[3]['place'], '', '=')
 			else:
 				# declaration
 				ST.addIdentifier(p[1]['name'], p[3]['type'])
-				place = ST.getNewTempVar()
-				ST.addAttribute(p[1]['name'], ST.getCurrentScope(), place)
+				# p[1]['place'] = ST.getNewTempVar()
+				# place = p[1]['place']
+				p[1]['place'] = p[3]['place']
+				level = ST.getAttribute(p[1]['name'], 'scopeLevel')
+				offset = ST.getAttribute(p[1]['name'], 'offset')
+				ST.changeMemLocation(p[1]['place'], (level, offset), p[1]['name'])
+				ST.addAttribute(p[1]['name'], ST.getCurrentScope(), p[1]['place'])
+				ST.addAttribute(p[1]['name'], 'reference', p[1]['reference'])
 
 			p[0]['nextlist'] = []
-			try:
-				if isList:
-					TAC.emit(ST.getCurrentScope(),place, p[3]['name'], 'ARRAY', '=')
-				else:
-					TAC.emit(ST.getCurrentScope(),place, p[3]['place'], '', '=')
-			except:		
-				error('Reference', p)
+			# TODO : may need in case of array
+			# try:
+			# 	if isList:
+			# 		TAC.emit(ST.getCurrentScope(),place, p[3]['name'], 'ARRAY', '=')
+			# 	else:
+			# 		TAC.emit(ST.getCurrentScope(),place, p[3]['place'], '', '=')
+			# except:		
+			# 	error('Reference', p)
 
 
 # print_stmt: 'print' [ test (',' test)* [','] ]
@@ -296,7 +304,7 @@ def p_print_stmt(p):
 			if itemType not in ['STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED']:
 				error('Print', p)
 			TAC.emit(ST.getCurrentScope(), item['place'], '', itemType, 'PRINT')
-		TAC.emit(ST.getCurrentScope(), '"\n"', '', 'STRING', 'PRINT')
+		# TAC.emit(ST.getCurrentScope(), '"\n"', '', 'STRING', 'PRINT')
 
 
 # flow_stmt: break_stmt | continue_stmt | return_stmt 
@@ -505,6 +513,7 @@ def p_array(p):
 	"""
 	if len(p) == 2:
 		p[0] = p[1]
+		p[0]['reference'] = p[1].get('reference')
 	else :
 		if p[3]['type'] != 'NUMBER':
 			error('Reference', p)
@@ -815,7 +824,8 @@ def p_atom2(p):
 	'''
 	p[0] = dict()
 	p[0]['type'] = 'NUMBER'
-	p[0]['place'] = p[1]
+	p[0]['place'] = ST.getNewTempVar()
+	TAC.emit(ST.getCurrentScope(), p[0]['place'], p[1], '', '=i')
 	# need to do symbol table thing, type attribution
 
 def p_atom3(p):
@@ -825,8 +835,6 @@ def p_atom3(p):
 	p[0] = dict()
 	p[0]['type'] = 'STRING'
 	p[0]['place'] = p[1]
-	p[0]['reference'] = ST.nameString()
-	ST.addToStringList(p[0]['reference'], p[0]['place'])
 
 def p_atom4(p):
 	'''atom :	FNUMBER
@@ -952,7 +960,7 @@ class G1Parser(object):
 		self.mlexer = mlexer
 		self.parser = yacc.yacc(start="file_input", debug=True)
 	def parse(self, code):
-		initializeTF()	
+		# initializeTF()	
 		self.mlexer.input(code)
 		self.parser.parse(lexer = self.mlexer, debug=True)
 		return ST, TAC

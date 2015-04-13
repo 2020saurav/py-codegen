@@ -3,19 +3,19 @@ import pprint
 class SymbolTable:
 	def __init__(self):
 		self.symbolTable = {
-			"program" : {
-				"scopeName"		: "program",
+			"main" : {
+				"scopeName"		: "main",
 				"type"			: "FUNCTION",
 				"returnType"	: "UNDEFINED",
 				"stringList"	: [],
-				"level"			: 0
+				"scopeLevel"	: 0
 			}
 		}
 
 		self.stackHistory = []
 		self.offsetStack	= [0]
-		self.functionlist = {'program':self.symbolTable['program']}
-		self.scopeStack	= [self.symbolTable["program"]]
+		self.functionlist = {'main':self.symbolTable['main']}
+		self.scopeStack	= [self.symbolTable["main"]]
 
 		self.addressDescriptor = dict()
 		self.stringCount = 0
@@ -62,19 +62,19 @@ class SymbolTable:
 
 	def addScope(self, scopeName):
 		currentScope = self.scopeStack[len(self.scopeStack) - 1]
-		level = currentScope['level'] + 1
+		level = currentScope['scopeLevel'] + 1
 		currentScope[scopeName] = {
 			"scopeName"		: scopeName,
 			"parentName"	: currentScope["scopeName"],
 			"type"			: "FUNCTION",
 			"returnType"	: "UNDEFINED",
 			"stringList"	: [],
-			"level"			: level
+			"scopeLevel"	: level
 		}
-		self.addIdentifier('True', 'BOOLEAN')
-		self.addAttribute('True', scopeName, 1)
-		self.addIdentifier('False', 'BOOLEAN')
-		self.addAttribute('False', scopeName, 0)
+		# self.addIdentifier('True', 'BOOLEAN')
+		# self.addAttribute('True', scopeName, 1)
+		# self.addIdentifier('False', 'BOOLEAN')
+		# self.addAttribute('False', scopeName, 0)
 
 		self.scopeStack.append(currentScope[scopeName])
 
@@ -93,7 +93,7 @@ class SymbolTable:
 		currentScope[identifier]["offset"] = currentOffset
 		currentScope[identifier]["type"] = identifierType
 		currentScope[identifier]["width"] = width	
-		currentScope[identifier]["scopeLevel"] = currentScope["level"]
+		currentScope[identifier]["scopeLevel"] = currentScope["scopeLevel"]
 		
 		self.offsetStack.append(currentOffset + width)
 

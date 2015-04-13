@@ -1,3 +1,10 @@
-a = 1
-b = 3
+a = 10
+b = 20
+print a
+print b
 c = a + b
+print c
+b = a * c
+print b
+b = b*b
+print b

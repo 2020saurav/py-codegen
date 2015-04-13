@@ -62,19 +62,19 @@ class RunTimeCode:
 		self.labelCount += 1
 		return self.labelBase + str(self.labelCount)
 
-	def putAbsoluteAddressInRegister(level, offset):
-		self.addLine(['la', '$s5', 'myspace', '']) # put the address of display into $s5
-		self.addLine(['li', '$s6', level, ''])		 # put the index into $s5
-		self.addLine(['add', '$s6', '$s6', '$s6'])	 # double the index
-		self.addLine(['add', '$s6', '$s6', '$s6'])	 # double the index again (now 4x)
-		self.addLine(['add', '$s7', '$s5', '$s6'])	 # combine the two components of the address
+	def putAbsoluteAddressInRegister(self, level, offset):
+		self.addLineToCode(['la', '$s5', '__display__', '']) # put the address of display into $s5
+		self.addLineToCode(['li', '$s6', level, ''])		 # put the index into $s5
+		self.addLineToCode(['add', '$s6', '$s6', '$s6'])	 # double the index
+		self.addLineToCode(['add', '$s6', '$s6', '$s6'])	 # double the index again (now 4x)
+		self.addLineToCode(['add', '$s7', '$s5', '$s6'])	 # combine the two components of the address
 
 		# Now we store the value to the location in the stack
-		self.addLine(['lw', '$s5', '0($s7)', ''])	  # load the value into display
-		self.addLine(['li', '$s6', offset, ''])		# put the offset into $s6
-		self.addLine(['add', '$s6', '$s6', '$s6'])	 # double the offset
-		self.addLine(['add', '$s6', '$s6', '$s6'])	 # double the offset again (now 4x)
-		self.addLine(['add', '$s7', '$s5', '$s6'])	 # combine the two components of the address
+		self.addLineToCode(['lw', '$s5', '0($s7)', ''])	  # load the value into display
+		self.addLineToCode(['li', '$s6', offset, ''])		# put the offset into $s6
+		self.addLineToCode(['add', '$s6', '$s6', '$s6'])	 # double the offset
+		self.addLineToCode(['add', '$s6', '$s6', '$s6'])	 # double the offset again (now 4x)
+		self.addLineToCode(['add', '$s7', '$s5', '$s6'])	 # combine the two components of the address
 
 	def addLineToCode(self, line):
 		self.code[self.currentFunction].append(line)
@@ -96,19 +96,19 @@ class RunTimeCode:
 				if self.ST.addressDescriptor[tempReg]['memory'] != None:
 					(level, offset) = self.ST.addressDescriptor[tempReg]['memory']
 					self.putAbsoluteAddressInRegister(level, offset)
-					self.addLine(['sw', register, '0($s7)', ''])		# store the value into the record
+					self.addLineToCode(['sw', register, '0($s7)', ''])		# store the value into the record
 					self.ST.addressDescriptor[tempReg]['store'] = True
 
 				if self.ST.addressDescriptor[temp]['memory'] != None:
 					(level, offset) = self.ST.addressDescriptor[temp]['memory']
 					self.putAbsoluteAddressInRegister(level, offset)
-					self.addLine(['lw', register, '0($s7)', ''])		# store the value into the record
+					self.addLineToCode(['lw', register, '0($s7)', ''])		# store the value into the record
 			else:
-				register = self.ST.freeRegisters.pop()
+				register = self.freeRegisters.pop()
 				if self.ST.addressDescriptor[temp]['memory'] != None and self.ST.addressDescriptor[temp]['store']:
-					(level, offset) = self.ST.addressDescriptor[tempReg]['memory']
+					(level, offset) = self.ST.addressDescriptor[temp]['memory']
 					self.putAbsoluteAddressInRegister(level, offset)
-					self.addLine(['lw', register, '0($s7)', ''])		# store the value into the record
+					self.addLineToCode(['lw', register, '0($s7)', ''])		# store the value into the record
 			
 			self.ST.addressDescriptor[temp]['register'] = register
 			self.busyRegisters.append(register)
@@ -124,7 +124,7 @@ class RunTimeCode:
 					(level, offset) = tempEntry['memory']
 					register = tempEntry['register']
 					self.putAbsoluteAddressInRegister(level, offset)
-					self.addLine(['lw', reg, '0($s7)', ''])
+					self.addLineToCode(['lw', reg, '0($s7)', ''])
 					self.ST.addressDescriptor[temp]['store'] = True
 
 	def flushRegisters(self, level, function):
@@ -135,7 +135,7 @@ class RunTimeCode:
 					(level, offset) = tempEntry['memory']
 					register = tempEntry['register']
 					self.putAbsoluteAddressInRegister(level, offset)
-					self.addLine(['sw', register, '0($s7)', ''])		# store the value into the record
+					self.addLineToCode(['sw', register, '0($s7)', ''])		# store the value into the record
 					tempEntry['store'] = True
 					tempEntry['register'] = None
 					self.registerDescriptor[register] = None
@@ -150,7 +150,7 @@ class RunTimeCode:
 			(level, offset) = tempEntry['memory']
 			register = tempEntry['register']
 			self.putAbsoluteAddressInRegister(level, offset)
-			self.addLine(['sw', register, '0($s7)', ''])		# store the value into the record
+			self.addLineToCode(['sw', register, '0($s7)', ''])		# store the value into the record
 			tempEntry['store'] = True
 			tempEntry['register'] = None
 			self.registerDescriptor[register] = None
@@ -158,13 +158,59 @@ class RunTimeCode:
 			self.busyRegisters.pop(self.busyRegisters.index(register))
 
 		elif tempEntry['register'] != None:
-			self.registerDescriptor[reg] = None
-			self.freeReg.append(reg)
-			self.regInUse.pop(self.regInUse.index(reg))
+			self.registerDescriptor[register] = None
+			self.freeRegisters.append(register)
+			self.busyRegisters.pop(self.busyRegisters.index(register))
 
-	def printCode(self):
-		for function in self.code.keys():
-			print function
-			for i in range(0, len(self.code[function])):
-				quad = self.code[functionName][i]
-				print quad[0] + ' ' + quad[1] + ' ' + quad[2] + ' ' + quad[3]
+	def printCode(self, fileName=''):
+		if fileName != '':
+			# Open the file
+			f = open('../build/' + fileName + '.s', 'w')
+
+			# Write out the data
+			data = open('../lib/data.s').read()
+			f.write(data)
+
+			# Print the strings in the file
+			for functionName in self.TAC.code:
+				functionEntry = self.ST.functionlist[functionName]
+				for stringEntry in functionEntry['stringList']:
+					f.write('\t%s:\t.asciiz\t"%s"\n' %(stringEntry[0], stringEntry[1]))
+
+			# Start of the code
+			f.write('\n.text\n')
+
+			# For each function, we have to print the data
+			for functionName in self.code.keys():
+				f.write("\n%s:\n" %functionName)
+				for i in range(len(self.code[functionName])):
+					codePoint = self.code[functionName][i]
+					if codePoint[0] == 'LABEL':
+						f.write("%s:\n" %codePoint[1])
+					elif codePoint[1] == '':
+						f.write("\t%s\n" %codePoint[0])
+					elif codePoint[2] == '':
+						f.write("\t%s\t\t%s\n" %(codePoint[0], codePoint[1]))
+					elif codePoint[3] == '':
+						f.write("\t%s\t\t%s,\t%s\n" %(codePoint[0], codePoint[1], codePoint[2]))
+					else:
+						f.write("\t%s\t\t%s,\t%s,\t%s\n" %(codePoint[0], codePoint[1], codePoint[2], codePoint[3]))
+
+			# Write out the libraray routines
+			data = open('../lib/code.s').read()
+			f.write(data)
+
+			# CLose the file
+			f.close()
+
+		else:
+			for functionName in self.code.keys():
+				print "\n%s:" %functionName
+				for i in range(len(self.code[functionName])):
+					codePoint = self.code[functionName][i]
+					# print "%5d: \t%s" %(self.ST.instructionSize * i, codePoint)
+					print "\t%s\t%s\t%s\t%s" %(codePoint[0], codePoint[1], codePoint[2], codePoint[3])
+
+		# self.TAC.printCode()
+		# pprint.pprint(self.ST.addressDescriptor)
+
