@@ -6,6 +6,14 @@ import runTimeCode
 filename = "../test/while.py"
 RTC = {}
 
+def registerAction(action):
+	global RTC
+	regs = ['$t0', '$t1', '$t2', '$t3', '$t4', '$t5', '$t6', '$t7', '$t8', '$t9', '$s0', '$s1', '$s2', '$s3', '$s4']
+	offset = 12
+	for reg in regs:
+		RTC.addLineToCode([action, reg, str(offset)+'($sp)', ''])
+		offset += 4
+
 def generateMIPSCode(code):
 	global RTC
 	sys.stderr = open('dump','w')
@@ -18,16 +26,12 @@ def generateMIPSCode(code):
 	for function in TAC.code:
 		RTC.addFunction(function)
 
-		# Different stuff for main
 		if (function == 'main'):
-			#allocate space for the registers by updating stack pointer
 			RTC.addLineToCode(['sub', '$sp', '$sp', '200'])
-
-			#set fame pointer of the callee
+			#set frame pointer of the callee
 			RTC.addLineToCode(['la', '$fp', '200($sp)', ''])
 			RTC.addLineToCode(['la', '$s5', '__display__', ''])
 			RTC.addLineToCode(['lw', '$s7', '0($s5)', ''])
-
 			#set display[level]
 			RTC.addLineToCode(['la', '$v0', '-' + str(ST.getAttributeFromFunctionList(function, 'width')) + '($sp)', ''])
 			RTC.addLineToCode(['sw','$v0', '0($s5)', ''])
@@ -37,16 +41,12 @@ def generateMIPSCode(code):
 		else:
 			#allocate space for the registers by updating stack pointer
 			RTC.addLineToCode(['sub', '$sp','$sp','72'])
-
 			#store return address of the caller
 			RTC.addLineToCode(['sw','$ra','0($sp)',''])
-
 			#sstore the frame pointer of the caller
 			RTC.addLineToCode(['sw','$fp','4($sp)',''])
-
 			#set fame pointer of the callee
 			RTC.addLineToCode(['la','$fp','72($sp)',''])
-
 			#storing display[level]
 			RTC.addLineToCode(['li','$v0',ST.getAttributeFromFunctionList(function, 'scopeLevel'),''])
 			RTC.addLineToCode(['la', '$s5', '__display__', ''])
@@ -55,28 +55,12 @@ def generateMIPSCode(code):
 			RTC.addLineToCode(['add', '$s6', '$v0', '$s5'])
 			RTC.addLineToCode(['lw','$s7','0($s6)',''])
 			RTC.addLineToCode(['sw','$s7','8($sp)',''])
-
 			#set display[level]
 			RTC.addLineToCode(['la', '$v0', '-' + str(ST.getAttributeFromFunctionList(function, 'width'))+'($sp)' , ''])
 			RTC.addLineToCode(['sw','$v0','0($s6)',''])
 
 			#store remaining registers
-			RTC.addLineToCode(['sw','$t0','12($sp)',''])
-			RTC.addLineToCode(['sw','$t1','16($sp)',''])
-			RTC.addLineToCode(['sw','$t2','20($sp)',''])
-			RTC.addLineToCode(['sw','$t3','24($sp)',''])
-			RTC.addLineToCode(['sw','$t4','28($sp)',''])
-			RTC.addLineToCode(['sw','$t5','32($sp)',''])
-			RTC.addLineToCode(['sw','$t6','36($sp)',''])
-			RTC.addLineToCode(['sw','$t7','40($sp)',''])
-			RTC.addLineToCode(['sw','$t8','44($sp)',''])
-			RTC.addLineToCode(['sw','$t9','48($sp)',''])
-			RTC.addLineToCode(['sw','$s0','52($sp)',''])
-			RTC.addLineToCode(['sw','$s1','56($sp)',''])
-			RTC.addLineToCode(['sw','$s2','60($sp)',''])
-			RTC.addLineToCode(['sw','$s3','64($sp)',''])
-			RTC.addLineToCode(['sw','$s4','68($sp)',''])
-
+			registerAction('sw')
 			# Create space for local data
 			RTC.addLineToCode(['li','$v0',ST.getAttributeFromFunctionList(function, 'width'),''])
 			RTC.addLineToCode(['sub','$sp','$sp','$v0'])
@@ -188,7 +172,6 @@ def generateMIPSCode(code):
 					RTC.addLineToCode(['jal', 'print_string', '', ''])
 				else:
 					RTC.addLineToCode(['jal', 'print_boolean', '', ''])
-
 			else:
 				RTC.addLineToCode(line)
 
@@ -196,15 +179,12 @@ def generateMIPSCode(code):
 		if function != 'main':
 			# Add a label to point to the end of the function
 			RTC.addLineToCode(['LABEL', function + 'end', '', ''])
-
 			# Remove the local data
 			RTC.addLineToCode(['addi','$sp','$sp',ST.getAttributeFromFunctionList(function,'width')])
-
 			# Get enviornment pointers
 			RTC.addLineToCode(['lw','$ra','0($sp)',''])
 			RTC.addLineToCode(['lw','$fp','4($sp)',''])
 			RTC.addLineToCode(['lw','$a0','8($sp)',''])
-
 			# diplay level
 			RTC.addLineToCode(['li','$a1',ST.getAttributeFromFunctionList(function, 'scopeLevel'),''])
 			RTC.addLineToCode(['la', '$s5', '__display__', ''])
@@ -213,31 +193,13 @@ def generateMIPSCode(code):
 			RTC.addLineToCode(['add', '$s6', '$a1', '$s5'])
 			RTC.addLineToCode(['sw','$a0','0($s6)',''])
 
-			# Registers
-			RTC.addLineToCode(['lw','$t0','12($sp)',''])
-			RTC.addLineToCode(['lw','$t1','16($sp)',''])
-			RTC.addLineToCode(['lw','$t2','20($sp)',''])
-			RTC.addLineToCode(['lw','$t3','24($sp)',''])
-			RTC.addLineToCode(['lw','$t4','28($sp)',''])
-			RTC.addLineToCode(['lw','$t5','32($sp)',''])
-			RTC.addLineToCode(['lw','$t6','36($sp)',''])
-			RTC.addLineToCode(['lw','$t7','40($sp)',''])
-			RTC.addLineToCode(['lw','$t8','44($sp)',''])
-			RTC.addLineToCode(['lw','$t9','48($sp)',''])
-			RTC.addLineToCode(['lw','$s0','52($sp)',''])
-			RTC.addLineToCode(['lw','$s1','56($sp)',''])
-			RTC.addLineToCode(['lw','$s2','60($sp)',''])
-			RTC.addLineToCode(['lw','$s3','64($sp)',''])
-			RTC.addLineToCode(['lw','$s4','68($sp)',''])
+			# Registers loading
+			registerAction('lw')
 			RTC.addLineToCode(['addi','$sp','$sp','72'])
 
 			# Jump to the calling procedure
 			RTC.addLineToCode(['jr','$ra','',''])
-
-	# Print the generated code
 	RTC.printCode('a')
-
-
 
 if __name__=="__main__":
 	z = parser.G1Parser()
