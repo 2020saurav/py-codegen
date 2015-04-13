@@ -7,9 +7,7 @@ class RunTimeCode:
 		self.registersCount = 1
 		self.labelCount = -1
 		self.labelBase = 'label'
-		self.freeRegisters = []
-		self.busyRegisters = []
-		self.resetRegsisters()
+		self.resetRegisters()
 
 	def resetRegisters(self):
 		self.registerDescriptor = {
@@ -30,10 +28,53 @@ class RunTimeCode:
 			'$s4' : None
 		}
 
-		for register in registerDescriptor.keys():
+		self.freeRegisters = []
+		for register in self.registerDescriptor.keys():
 			self.freeRegisters.append(register)
 
 		self.busyRegisters = []
+
+	def fixLabels(self):
+		for function in self.TAC.code:
+			unresolvedLabels = {}
+			for line in self.TAC.code[function]:
+				if line[3] in ['COND_GOTO', 'GOTO']:
+					if line[2] in unresolvedLabels:
+						label = unresolvedLabels[line[2]]
+					else:
+						label = self.nameLabel()
+						unresolvedLabels[line[2]] = label
+
+					line[2] = label
+
+			lineNumber = -1
+			count = 0
+			for line in range(len(self.TAC.code[function])):
+				lineNumber += 1
+
+				if lineNumber in unresolvedLabels.keys():
+					effectiveLineNumber = lineNumber + count
+					self.TAC.code[function].insert(effectiveLineNumber, ['LABEL', unresolvedLabels[lineNumber], '', ''])
+					count += 1
+					del unresolvedLabels[lineNumber]
+
+	def nameLabel(self):
+		self.labelCount += 1
+		return self.labelBase + str(self.labelCount)
+
+	def putAbsoluteAddressInRegister(level, offset):
+		self.addLine(['la', '$s5', 'myspace', '']) # put the address of display into $s5
+		self.addLine(['li', '$s6', level, ''])		 # put the index into $s5
+		self.addLine(['add', '$s6', '$s6', '$s6'])	 # double the index
+		self.addLine(['add', '$s6', '$s6', '$s6'])	 # double the index again (now 4x)
+		self.addLine(['add', '$s7', '$s5', '$s6'])	 # combine the two components of the address
+
+		# Now we store the value to the location in the stack
+		self.addLine(['lw', '$s5', '0($s7)', ''])	  # load the value into display
+		self.addLine(['li', '$s6', offset, ''])		# put the offset into $s6
+		self.addLine(['add', '$s6', '$s6', '$s6'])	 # double the offset
+		self.addLine(['add', '$s6', '$s6', '$s6'])	 # double the offset again (now 4x)
+		self.addLine(['add', '$s7', '$s5', '$s6'])	 # combine the two components of the address
 
 	def addLineToCode(self, line):
 		self.code[self.currentFunction].append(line)
@@ -42,14 +83,7 @@ class RunTimeCode:
 		self.currentFunction = function
 		self.code[function] = []
 
-	def printCode(self):
-		for function in self.code.keys():
-			print function
-			for i in range(0, len(self.code[function])):
-				quad = self.code[functionName][i]
-				print quad[0] + ' ' + quad[1] + ' ' + quad[2] + ' ' + quad[3]
-
-	def nextRegister(self, temp):
+	def getRegister(self, temp):
 		if temp in self.registerDescriptor.values():
 			register = self.ST.addressDescriptor[temp]['register']
 		else:
@@ -61,43 +95,76 @@ class RunTimeCode:
 				
 				if self.ST.addressDescriptor[tempReg]['memory'] != None:
 					(level, offset) = self.ST.addressDescriptor[tempReg]['memory']
-					self.addLine(['la', '$s5', '__display__', '']) # put the address of display into $s5
-					self.addLine(['li', '$s6', level, ''])         # put the index into $s5
-					self.addLine(['add', '$s6', '$s6', '$s6'])     # double the index
-					self.addLine(['add', '$s6', '$s6', '$s6'])     # double the index again (now 4x)
-					self.addLine(['add', '$s7', '$s5', '$s6'])     # combine the two components of the address
-
-					# Now we store the value to the location in the stack
-					self.addLine(['lw', '$s5', '0($s7)', ''])      # load the value into display
-					self.addLine(['li', '$s6', offset, ''])        # put the offset into $s6
-					self.addLine(['add', '$s6', '$s6', '$s6'])     # double the offset
-					self.addLine(['add', '$s6', '$s6', '$s6'])     # double the offset again (now 4x)
-					self.addLine(['add', '$s7', '$s5', '$s6'])     # combine the two components of the address
-
-					self.addLine(['sw', register, '0($s7)', ''])        # store the value into the record
+					self.putAbsoluteAddressInRegister(level, offset)
+					self.addLine(['sw', register, '0($s7)', ''])		# store the value into the record
 					self.ST.addressDescriptor[tempReg]['store'] = True
 
 				if self.ST.addressDescriptor[temp]['memory'] != None:
 					(level, offset) = self.ST.addressDescriptor[temp]['memory']
-					# First we load in the value of the activation record where we have to store the value
-					self.addLine(['la', '$s5', '__display__', '']) # put the address of display into $s5
-					self.addLine(['li', '$s6', level, ''])         # put the index into $s5
-					self.addLine(['add', '$s6', '$s6', '$s6'])     # double the index
-					self.addLine(['add', '$s6', '$s6', '$s6'])     # double the index again (now 4x)
-					self.addLine(['add', '$s7', '$s5', '$s6'])     # combine the two components of the address
-
-					# Now we store the value to the location in the stack
-					self.addLine(['lw', '$s5', '0($s7)', ''])      # load the value into display
-					self.addLine(['li', '$s6', offset, ''])        # put the offset into $s6
-					self.addLine(['add', '$s6', '$s6', '$s6'])     # double the offset
-					self.addLine(['add', '$s6', '$s6', '$s6'])     # double the offset again (now 4x)
-					self.addLine(['add', '$s7', '$s5', '$s6'])     # combine the two components of the address
-
-					self.addLine(['lw', register, '0($s7)', ''])        # store the value into the record
+					self.putAbsoluteAddressInRegister(level, offset)
+					self.addLine(['lw', register, '0($s7)', ''])		# store the value into the record
 			else:
-				pass 			
+				register = self.ST.freeRegisters.pop()
+				if self.ST.addressDescriptor[temp]['memory'] != None and self.ST.addressDescriptor[temp]['store']:
+					(level, offset) = self.ST.addressDescriptor[tempReg]['memory']
+					self.putAbsoluteAddressInRegister(level, offset)
+					self.addLine(['lw', register, '0($s7)', ''])		# store the value into the record
+			
+			self.ST.addressDescriptor[temp]['register'] = register
+			self.busyRegisters.append(register)
+			self.registerDescriptor[register] = temp
 
+		return register
 
+	def reloadParentRegisters(self, level, function):
+		for temp in self.ST.addressDescriptor:
+			tempEntry = self.ST.addressDescriptor[temp]
+			if tempEntry['memory'] != None and tempEntry['scope'] == function:
+				if tempEntry['memory'][0] <= level and tempEntry['register'] != None:
+					(level, offset) = tempEntry['memory']
+					register = tempEntry['register']
+					self.putAbsoluteAddressInRegister(level, offset)
+					self.addLine(['lw', reg, '0($s7)', ''])
+					self.ST.addressDescriptor[temp]['store'] = True
 
+	def flushRegisters(self, level, function):
+		for temp in self.ST.addressDescriptor:
+			tempEntry = self.ST.addressDescriptor[temp]
+			if temp['memory'] != None and tempEntry['scope'] == function:
+				if temp['memory'][0] <= level and temp['register'] != None:
+					(level, offset) = tempEntry['memory']
+					register = tempEntry['register']
+					self.putAbsoluteAddressInRegister(level, offset)
+					self.addLine(['sw', register, '0($s7)', ''])		# store the value into the record
+					tempEntry['store'] = True
+					tempEntry['register'] = None
+					self.registerDescriptor[register] = None
+					self.freeRegisters.append(register)
+					self.busyRegisters.pop(self.busyRegisters.index(register))
 
+	def flushTemporary(self, temp):
+		tempEntry = self.ST.addressDescriptor[temp]
+		register = tempEntry['register']
 
+		if tempEntry['memory'] != None and tempEntry['register'] != None:
+			(level, offset) = tempEntry['memory']
+			register = tempEntry['register']
+			self.putAbsoluteAddressInRegister(level, offset)
+			self.addLine(['sw', register, '0($s7)', ''])		# store the value into the record
+			tempEntry['store'] = True
+			tempEntry['register'] = None
+			self.registerDescriptor[register] = None
+			self.freeRegisters.append(register)
+			self.busyRegisters.pop(self.busyRegisters.index(register))
+
+		elif tempEntry['register'] != None:
+			self.registerDescriptor[reg] = None
+			self.freeReg.append(reg)
+			self.regInUse.pop(self.regInUse.index(reg))
+
+	def printCode(self):
+		for function in self.code.keys():
+			print function
+			for i in range(0, len(self.code[function])):
+				quad = self.code[functionName][i]
+				print quad[0] + ' ' + quad[1] + ' ' + quad[2] + ' ' + quad[3]
