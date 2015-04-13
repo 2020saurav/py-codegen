@@ -94,7 +94,7 @@ def p_function_call(p):
 	p[0] = dict()
 	place = ''
 	if not ST.exists(p[1]):
-		error('Referencei', p[1])
+		error('Reference', p[1])
 	else :
 		identifierType = ST.getAttribute(p[1], 'type')
 		if identifierType == 'FUNCTION':
@@ -113,7 +113,7 @@ def p_function_call(p):
 			TAC.emit(ST.getCurrentScope(), returnPlace, '', '', 'FUNCTION_RETURN')
 			p[0]['place'] = returnPlace
 		else :
-			error('Referencej', p[1])
+			error('Reference', p[1])
 	# p[0]['type'] = 'UNDEFINED'
 #varargslist: fpdef ['=' test] (',' fpdef ['=' test])* 
 def p_varargslist(p):
@@ -221,7 +221,7 @@ def p_expr_stmt(p):
 			try:
 				TAC.emit(ST.getCurrentScope(), absAddr, p[3]['place'], '', 'SW')
 			except:		
-				error('Referencek', p)
+				error('Reference', p)
 		
 	except:
 		if haltExecution:
@@ -262,9 +262,9 @@ def p_expr_stmt(p):
 				if ST.existsInCurrentScope(p[1]['name']):
 					place = ST.getAttribute(p[1]['name'], ST.getCurrentScope())
 				else:
-					level = ST.getAttribute(p[1], 'scopeLevel')
-					offset = ST.getAttribute(p[1], 'offset')
-					place = ST.getNewTempVar((level, offset), p[1])
+					level = ST.getAttribute(p[1]['name'], 'scopeLevel')
+					offset = ST.getAttribute(p[1]['name'], 'offset')
+					place = ST.getNewTempVar((level, offset), p[1]['name'])
 					ST.addAttribute(p[1]['name'], ST.getCurrentScope(), place)
 			else:
 				# declaration
@@ -279,19 +279,8 @@ def p_expr_stmt(p):
 				else:
 					TAC.emit(ST.getCurrentScope(),place, p[3]['place'], '', '=')
 			except:		
-				error('Referencel', p)
+				error('Reference', p)
 
-
-
-# augassign: ('+=' | '-=' | '*=' | '/=' | '%=' | '**=' | '//=')
-## CHANGING GRAMMAR : No longer required
-# def p_augassign(p):
-# 	"""augassign 	: PLUSEQUAL 
-# 					| MINEQUAL 
-# 					| STAREQUAL 
-# 					| SLASHEQUAL 
-# 					| PERCENTEQUAL 
-# 	"""
 
 # print_stmt: 'print' [ test (',' test)* [','] ]
 def p_print_stmt(p):
@@ -309,11 +298,6 @@ def p_print_stmt(p):
 			TAC.emit(ST.getCurrentScope(), item['place'], '', itemType, 'PRINT')
 		TAC.emit(ST.getCurrentScope(), '"\n"', '', 'STRING', 'PRINT')
 
-
-
-# pass_stmt: 'pass'
-# def p_pass_stmt(p):
-# 	"pass_stmt : PASS"
 
 # flow_stmt: break_stmt | continue_stmt | return_stmt 
 def p_flow_stmt(p):
@@ -367,28 +351,6 @@ def p_return_stmt(p):
 		else:
 			pass
 		TAC.emit(ST.getCurrentScope(), p[2]['place'], '', '', 'RETURN')
-
-# TODO:
-# import_stmt: 'import' NAME
-# def p_import_stmt(p): 
-# 	"""import_stmt 	:	IMPORT NAME
-# 	"""
-
-# global_stmt: 'global' NAME (',' NAME)*
-# def p_global_stmt(p):
-# 	"""global_stmt 	: GLOBAL NAME namelist
-# 	"""
-
-## CHANGING GRAMMAR : No longer needed
-# def p_namelist(p):
-# 	"""namelist 	: 
-# 					| COMMA NAME namelist
-# 	"""
-# assert_stmt: 'assert' test [',' test]
-## CHANGING GRAMMAR : No longer needed
-# def p_assert_stmt(p):
-# 	"""assert_stmt 	: ASSERT testlist
-# 	"""
 
 # compound_stmt: if_stmt | while_stmt | for_stmt | funcdef | classdef 
 def p_compound_stmt(p):
@@ -545,12 +507,12 @@ def p_array(p):
 		p[0] = p[1]
 	else :
 		if p[3]['type'] != 'NUMBER':
-			error('Reference1', p)
+			error('Reference', p)
 		else:
 			try:
 				p[1]['isIdentifier']
 			except:
-				error('Reference2', p[1])
+				error('Reference', p[1])
 			# set values to propagate above uptil test = test.
 			# to handle a[i] = x, x = a[i] and a[i] = a[j]
 			p[0] = dict()
@@ -601,7 +563,7 @@ def p_and_test(p):
 			TAC.emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
-				error('Reference4', p)
+				error('Reference', p)
 			error('Type', p)
 
 # not_test: 'not' not_test | comparison
@@ -619,7 +581,7 @@ def p_not_test(p):
 			TAC.emit(ST.getCurrentScope(),p[0]['place'], p[2]['place'],'', p[1])
 		else:
 			if(p[2]['type']=='REFERENCE_ERROR'):
-				error('Reference5', p)
+				error('Reference', p)
 			# print 4
 			error('Type', p)
 
@@ -635,7 +597,7 @@ def p_comparision(p):
 			# okay : Nothing to do here
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
-				error('Reference6', p)
+				error('Reference', p)
 			# print 5
 			error('Type', p)
 		p[0] = dict()
@@ -670,7 +632,7 @@ def p_expr(p):
 			TAC.emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
-				error('Reference7', p)
+				error('Reference', p)
 			error('Type', p)
 
 # xor_expr: and_expr ('^' and_expr)*
@@ -688,7 +650,7 @@ def p_xor_expr(p):
 			TAC.emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
-				error('Reference8', p)
+				error('Reference', p)
 			error('Type', p)
 
 # and_expr: shift_expr ('&' shift_expr)*
@@ -706,7 +668,7 @@ def p_and_expr(p):
 			TAC.emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
-				error('Reference9', p)
+				error('Reference', p)
 			error('Type', p)
 
 # shift_expr: arith_expr (('<<'|'>>') arith_expr)*
@@ -725,7 +687,7 @@ def p_shift_expr(p):
 			TAC.emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
-				error('Referencea', p)
+				error('Reference', p)
 			error('Type', p)
 
 # arith_expr: term (('+'|'-') term)*
@@ -744,7 +706,7 @@ def p_arith_expr(p):
 			TAC.emit(ST.getCurrentScope(),p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
-				error('Referenceb', p)
+				error('Reference', p)
 			error('Type', p)
 
 
@@ -765,7 +727,7 @@ def p_term(p):
 			TAC.emit(ST.getCurrentScope(), p[0]['place'], p[1]['place'], p[3]['place'], p[2])
 		else:
 			if(p[1]['type']=='REFERENCE_ERROR' or p[3]['type']=='REFERENCE_ERROR'):
-				error('Referencec', p)
+				error('Reference', p)
 			error('Type', p)
 
 # factor: ('+'|'-') factor | power
@@ -793,12 +755,12 @@ def p_power(p):
 		p[0] = p[1]
 	else :
 		if p[3]['type'] != 'NUMBER':
-			error('Referenced', p)
+			error('Reference', p)
 		else:
 			try:
 				p[1]['isIdentifier']
 			except:
-				error('Referencee', p[1])
+				error('Reference', p[1])
 			# set values to propagate above uptil test = test.
 			# to handle a[i] = x, x = a[i] and a[i] = a[j]
 			p[0] = dict()
@@ -824,7 +786,7 @@ def p_power(p):
 				p[0]['isArray'] = True
 				p[0]['name'] = p[1]['name']
 			except:
-				error('Referencef', p[1])
+				error('Reference', p[1])
 
 
 def p_atom1(p):
@@ -863,6 +825,8 @@ def p_atom3(p):
 	p[0] = dict()
 	p[0]['type'] = 'STRING'
 	p[0]['place'] = p[1]
+	p[0]['reference'] = ST.nameString()
+	ST.addToStringList(p[0]['reference'], p[0]['place'])
 
 def p_atom4(p):
 	'''atom :	FNUMBER
@@ -909,7 +873,7 @@ def p_listmaker(p):
 			p[0]['place'] = [p[1]['place']]
 			p[0]['type'] = p[1]['type']
 		except:
-			error('Referenceg', p)
+			error('Reference', p)
 	else:
 		if p[3]['type'] != p[1]['type']:
 			error('Type', p)
@@ -918,7 +882,7 @@ def p_listmaker(p):
 				p[0]['place'] = [p[1]['place']] + p[3]['place']
 				p[0]['type'] = p[1]['type']
 			except:
-				error('Referenceh', p)
+				error('Reference', p)
 
 # testlist_comp: test (',' test)* [','] 
 def p_testlist_comp(p):
