@@ -99,14 +99,14 @@ def p_function_call(p):
 	else :
 		identifierType = ST.getAttribute(p[1], 'type')
 		if identifierType == 'FUNCTION':
-			if not ST.existsInCurrentScope(p[1]):
-				level = ST.getAttribute(p[1], 'scopeLevel')
-				offset = ST.getAttribute(p[1], 'offset')
-				place = ST.getNewTempVar((level, offset), p[1], True)
-				ST.addAttribute(p[1], ST.getCurrentScope(), place)
-			else:
-				place = ST.getAttribute(p[1], 'var')
-				# print place
+			place = ST.getAttribute(p[1], 'var')
+			# if place == None:
+			# 	if not ST.existsInCurrentScope(p[1]):
+			# 		level = ST.getAttribute(p[1], 'scopeLevel')
+			# 		offset = ST.getAttribute(p[1], 'offset')
+			# 		ST.addAttribute(p[1], ST.getCurrentScope(), place)
+			# 	else:
+			# 		place = ST.getAttribute(p[1], 'var')
 
 			if len(p)==4:
 				pass
@@ -272,7 +272,6 @@ def p_expr_stmt(p):
 				p[1]['name']
 			except:
 				error("Cannot assign to constant", p)
-
 			if ST.exists(p[1]['name']):
 				ST.addAttribute(p[1]['name'], 'type', p[3]['type'])
 				if ST.existsInCurrentScope(p[1]['name']):

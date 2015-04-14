@@ -19,7 +19,7 @@ def generateMIPSCode(code):
 	sys.stderr = open('dump','w')
 	ST, TAC = z.parse(code)
 	# sys.stderr.close()
-	# TAC.printCode()
+	TAC.printCode()
 	# ST.printSymbolTableHistory()
 	RTC = runTimeCode.RunTimeCode(ST, TAC)
 	RTC.fixLabels()
