@@ -3,9 +3,8 @@ import parser
 import sys
 import runTimeCode
 
-filename = "../test/printing.py"
 RTC = {}
-
+outputFile = 'a'
 def registerAction(action):
 	global RTC
 	regs = ['$t0', '$t1', '$t2', '$t3', '$t4', '$t5', '$t6', '$t7', '$t8', '$t9', '$s0', '$s1', '$s2', '$s3', '$s4']
@@ -15,6 +14,7 @@ def registerAction(action):
 		offset += 4
 
 def generateMIPSCode(code):
+	global outputFile
 	global RTC
 	sys.stderr = open('dump','w')
 	ST, TAC = z.parse(code)
@@ -181,12 +181,14 @@ def generateMIPSCode(code):
 			RTC.addLineToCode(['addi','$sp','$sp','72'])
 			RTC.addLineToCode(['jr','$ra','',''])
 
-	RTC.printCode('a')
+	RTC.printCode(outputFile)
 
 if __name__=="__main__":
 	z = parser.G1Parser()
-	library = open('../lib/library.py')
+	library = open('lib/library.py')
 	libraryCode = library.read()
+	filename = sys.argv[1]
+	outputFile = (filename.split('/')[-1]).split('.')[0]
 	sourcefile = open(filename)
 	code = sourcefile.read()
 	code = libraryCode + code

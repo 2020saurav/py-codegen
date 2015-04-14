@@ -145,8 +145,8 @@ class RunTimeCode:
 			self.busyRegisters.pop(self.busyRegisters.index(register))
 
 	def printCode(self, fileName=''):
-		f = open('../build/' + fileName + '.s', 'w')
-		data = open('../lib/data.s').read()
+		f = open('build/' + fileName + '.s', 'w')
+		data = open('lib/data.s').read()
 		f.write(data)
 		for functionName in self.TAC.code:
 			functionEntry = self.ST.functionlist[functionName]
@@ -169,6 +169,6 @@ class RunTimeCode:
 				else:
 					f.write("\t%s\t\t%s,\t%s,\t%s\n" %(codePoint[0], codePoint[1], codePoint[2], codePoint[3]))
 		# labels for printing etc
-		data = open('../lib/code.s').read()
+		data = open('lib/code.s').read()
 		f.write(data)
 		f.close()
