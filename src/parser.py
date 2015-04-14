@@ -45,26 +45,26 @@ def p_funcdef(p):
     ST.removeCurrentScope()
     p[0] = dict()
     p[0]['type'] = 'FUNCTION'
-    p[0]['name'] = p[3]['name']
+    p[0]['reference'] = p[3]['reference']
 
 
 def p_MarkerScope(p):
 	"""MarkerScope 	:
 	"""
 	p[0] = dict()
-	p[0]['name'] = p[-1]
-	if ST.existsInCurrentScope(p[0]['name']):
-		error('Redefinition', p[0]['name'])
+	p[0]['reference'] = p[-1]
+	if ST.existsInCurrentScope(p[0]['reference']):
+		error('Redefinition', p[0]['reference'])
 	else:
-		ST.addIdentifier(p[0]['name'], 'FUNCTION')
+		ST.addIdentifier(p[0]['reference'], 'FUNCTION')
 		level = ST.getAttribute(p[-1], 'scopeLevel')
 		offset = ST.getAttribute(p[-1], 'offset')
 		place = ST.getNewTempVar((level, offset), p[-1])
-		ST.addAttribute(p[0]['name'], ST.getCurrentScope(), place)
-		ST.addAttribute(p[0]['name'], 'name', p[0]['name'])
-		# TAC.emit(ST.getCurrentScope(), place, p[0]['name'], '', 'REF')
-		ST.addScope(p[0]['name'])
-		TAC.createNewFucntionCode(p[0]['name'])
+		ST.addAttribute(p[-1], ST.getCurrentScope(), place)
+		ST.addAttribute(p[-1], 'reference', p[0]['reference'])
+		TAC.emit(ST.getCurrentScope(), place, p[0]['reference'], '', '=REF')
+		ST.addScope(p[0]['reference'])
+		TAC.createNewFucntionCode(p[0]['reference'])
 
 def p_MarkerArg(p):
 	"""MarkerArg 	:
@@ -824,7 +824,12 @@ def p_atom2(p):
 	'''
 	p[0] = dict()
 	p[0]['type'] = 'NUMBER'
-	p[0]['place'] = ST.getNewTempVar()
+	name = ST.getNewTempVar()
+	ST.addIdentifier(name, 'NUMBER')
+	level = ST.getAttribute(name, 'scopeLevel')
+	offset = ST.getAttribute(name, 'offset')
+
+	p[0]['place'] = ST.getNewTempVar((level, offset), name)
 	TAC.emit(ST.getCurrentScope(), p[0]['place'], p[1], '', '=i')
 	# need to do symbol table thing, type attribution
 

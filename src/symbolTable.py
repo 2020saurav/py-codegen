@@ -157,7 +157,7 @@ class SymbolTable:
 		elif identifierType == 'FUNCTION':
 			width = 4
 		elif identifierType == 'BOOLEAN':
-			width = 1
+			width = 4
 		else:
 			width = 0
 		return width

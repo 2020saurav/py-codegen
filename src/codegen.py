@@ -3,7 +3,7 @@ import parser
 import sys
 import runTimeCode
 
-filename = "../test/while.py"
+filename = "../test/func.py"
 RTC = {}
 
 def registerAction(action):
@@ -75,7 +75,7 @@ def generateMIPSCode(code):
 				RTC.addLineToCode(['jal', RTC.getRegister(line[2]), '', ''])
 				RTC.reloadParents(ST.getAttributeFromFunctionList(function, 'scopeLevel'), function)
 
-			elif line[3] == 'JUMPBACK':
+			elif line[3] == 'JUMP_RETURN':
 				RTC.addLineToCode(['b', function + 'end', '', ''])
 
 			elif line[3] == 'PARAM':
@@ -84,65 +84,71 @@ def generateMIPSCode(code):
 
 			elif line[3] == '=':
 				RTC.addLineToCode(['move', RTC.getRegister(line[0]), RTC.getRegister(line[1]), ''])
-				RTC.flushTemporary(line[0])
+				# RTC.flushTemporary(line[0])
 
 			elif line[3] == '=i':
 				RTC.addLineToCode(['li', RTC.getRegister(line[0]), line[1], ''])
-				RTC.flushTemporary(line[0])
+				# RTC.flushTemporary(line[0])
 
 			elif line[3] == '=REF':
 				RTC.addLineToCode(['la', RTC.getRegister(line[0]), line[1], ''])
-				RTC.flushTemporary(line[0])
+				# RTC.flushTemporary(line[0])
 
 			elif line[3] == '+':
 				RTC.addLineToCode(['add', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
-				RTC.flushTemporary(line[0])
+				# RTC.flushTemporary(line[0])
 
 			elif line[3] == '-':
 				RTC.addLineToCode(['sub', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
-				RTC.flushTemporary(line[0])
+				# RTC.flushTemporary(line[0])
 
 			elif line[3] == '*':
 				RTC.addLineToCode(['mult', RTC.getRegister(line[1]), RTC.getRegister(line[2]),''])
 				RTC.addLineToCode(['mflo', RTC.getRegister(line[0]),'',''])
-				RTC.flushTemporary(line[0])
+				# RTC.flushTemporary(line[0])
 
 			elif line[3] == '/':
 				RTC.addLineToCode(['div', RTC.getRegister(line[1]), RTC.getRegister(line[2]), ''])
 				RTC.addLineToCode(['mflo', RTC.getRegister(line[0]), '', ''])
-				RTC.flushTemporary(line[0])
+				# RTC.flushTemporary(line[0])
 
 			elif line[3] == '%':
 				RTC.addLineToCode(['div', RTC.getRegister(line[1]), RTC.getRegister(line[2]), ''])
 				RTC.addLineToCode(['mfhi', RTC.getRegister(line[0]), '', ''])
-				RTC.flushTemporary(line[0])
+				# RTC.flushTemporary(line[0])
 
 			elif line[3] == '<':
+				print line[0],line[1],line[2]
 				RTC.addLineToCode(['slt', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
-				RTC.flushTemporary(line[0])
+				# RTC.flushTemporary(line[0])
 
 			elif line[3] == '>':
 				RTC.addLineToCode(['sgt', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
-				RTC.flushTemporary(line[0])
+				# RTC.flushTemporary(line[0])
 
 			elif line[3] == '<=':
 				RTC.addLineToCode(['sle', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
-				RTC.flushTemporary(line[0])
+				# RTC.flushTemporary(line[0])
 
 			elif line[3] == '>=':
 				RTC.addLineToCode(['sge', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
-				RTC.flushTemporary(line[0])
+				# RTC.flushTemporary(line[0])
 
 			elif line[3] == '==':
 				RTC.addLineToCode(['seq', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
-				RTC.flushTemporary(line[0])
+				# RTC.flushTemporary(line[0])
 
 			elif line[3] == '!=':
 				RTC.addLineToCode(['sne', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
-				RTC.flushTemporary(line[0])
+				# RTC.flushTemporary(line[0])
+			elif line[3] == 'or':
+				RTC.addLineToCode(['or', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
+			
+			elif line[3] == 'and':
+				RTC.addLineToCode(['and', RTC.getRegister(line[0]), RTC.getRegister(line[1]), RTC.getRegister(line[2])])
 
 			elif line[3] == 'COND_GOTO':
-				RTC.addLineToCode(['beq', RTC.getRegister(line[0]), '$0', line[2]])
+				RTC.addLineToCode(['beq', RTC.getRegister(line[0]), line[1], line[2]])
 
 			elif line[3] == 'GOTO':
 				RTC.addLineToCode(['b', line[2], '', ''])

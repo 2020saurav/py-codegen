@@ -1,5 +1,6 @@
-a = 10
+a = 100
+summ = 0
 while a > 0:
-	b = a - 1
-	print b
-	a = b
+	summ = summ + a
+	a = a-1
+print summ

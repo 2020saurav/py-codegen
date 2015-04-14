@@ -104,6 +104,7 @@ class RunTimeCode:
 					self.putAbsoluteAddressInRegister(level, offset)
 					self.addLineToCode(['lw', register, '0($s7)', ''])		# store the value into the record
 			else:
+				print "hello"
 				register = self.freeRegisters.pop()
 				if self.ST.addressDescriptor[temp]['memory'] != None and self.ST.addressDescriptor[temp]['store']:
 					(level, offset) = self.ST.addressDescriptor[temp]['memory']
@@ -113,6 +114,7 @@ class RunTimeCode:
 			self.ST.addressDescriptor[temp]['register'] = register
 			self.busyRegisters.append(register)
 			self.registerDescriptor[register] = temp
+			print (register, temp)
 
 		return register
 
