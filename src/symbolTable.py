@@ -34,7 +34,6 @@ class SymbolTable:
 						}
 
 		if memLocation != '':
-			print memLocation, variable
 			self.addressDescriptor[tempVar]['memory'] = memLocation
 		return tempVar	
 	

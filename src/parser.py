@@ -312,14 +312,14 @@ def p_print_stmt(p):
 	"""
 	p[0] = dict()
 	if len(p)==2:
-		TAC.emit(ST.getCurrentScope(), '"\n"', '', 'STRING', 'PRINT')
+		TAC.emit(ST.getCurrentScope(), '', '', '', 'PRINT')
 	else:
 		for item in p[2]:
 			itemType = item.get('type')
 			if itemType not in ['STRING', 'NUMBER', 'BOOLEAN', 'UNDEFINED']:
 				error('Print', p)
 			TAC.emit(ST.getCurrentScope(), item['place'], '', itemType, 'PRINT')
-		# TAC.emit(ST.getCurrentScope(), '"\n"', '', 'STRING', 'PRINT')
+			TAC.emit(ST.getCurrentScope(), '', '', '', 'PRINT')
 
 
 # flow_stmt: break_stmt | continue_stmt | return_stmt 
