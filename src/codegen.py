@@ -23,6 +23,7 @@ def generateMIPSCode(code):
 	ST.printSymbolTableHistory()
 	RTC = runTimeCode.RunTimeCode(ST, TAC)
 	RTC.fixLabels()
+	counter = 0
 	for function in TAC.code:
 		RTC.addFunction(function)
 
@@ -62,7 +63,7 @@ def generateMIPSCode(code):
 			#store remaining registers
 			registerAction('sw')
 			# Create space for local data
-			RTC.addLineToCode(['li','$v0',ST.getAttributeFromFunctionList(function, 'width'),''])
+			RTC.addLineToCode(['li','$v0',ST.getAttributeFromFunctionList(function, 'width')+16,''])
 			RTC.addLineToCode(['sub','$sp','$sp','$v0'])
 
 			# Copy the parameters
@@ -73,7 +74,7 @@ def generateMIPSCode(code):
 			if line[3] == 'JUMPLABEL':
 				counter = 0 ;
 				RTC.addLineToCode(['jal', RTC.getRegister(line[2]), '', ''])
-				RTC.reloadParents(ST.getAttributeFromFunctionList(function, 'scopeLevel'), function)
+				RTC.reloadParentRegisters(ST.getAttributeFromFunctionList(function, 'scopeLevel'), function)
 
 			elif line[3] == 'JUMP_RETURN':
 				RTC.addLineToCode(['b', function + 'end', '', ''])
@@ -159,20 +160,20 @@ def generateMIPSCode(code):
 			elif line[3] == 'RETURN':
 				RTC.addLineToCode(['move', '$v0', RTC.getRegister(line[0]), ''])
 				RTC.addLineToCode(['b', function + 'end', '', ''])
-
+ 
 			elif line[3] == 'HALT':
 				RTC.addLineToCode(['jal', 'exit', '', ''])
 
 			elif line[3] == 'PRINT' and line[0] == '':
 				RTC.addLineToCode(['jal', 'print_newline', '', ''])
 
-			elif line[3] == 'PRINT' and line[2] == 'UNDEFINED':
-				RTC.addLineToCode(['jal', 'print_undefined', '', ''])
+			# elif line[3] == 'PRINT' and line[2] == 'UNDEFINED':
+			# 	RTC.addLineToCode(['jal', 'print_undefined', '', ''])
 
 			elif line[3] == 'PRINT':
 				RTC.addLineToCode(['move', '$a0', RTC.getRegister(line[0]), ''])
 
-				if line[2] == 'NUMBER':
+				if line[2] == 'NUMBER' or line[2] == 'UNDEFINED':
 					RTC.addLineToCode(['jal', 'print_integer', '', ''])
 				elif line[2] == 'STRING':
 					RTC.addLineToCode(['jal', 'print_string', '', ''])
@@ -186,7 +187,7 @@ def generateMIPSCode(code):
 			# Add a label to point to the end of the function
 			RTC.addLineToCode(['LABEL', function + 'end', '', ''])
 			# Remove the local data
-			RTC.addLineToCode(['addi','$sp','$sp',ST.getAttributeFromFunctionList(function,'width')])
+			RTC.addLineToCode(['addi','$sp','$sp',ST.getAttributeFromFunctionList(function,'width')+16])
 			# Get enviornment pointers
 			RTC.addLineToCode(['lw','$ra','0($sp)',''])
 			RTC.addLineToCode(['lw','$fp','4($sp)',''])

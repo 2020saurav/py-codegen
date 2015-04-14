@@ -60,7 +60,7 @@ class SymbolTable:
 		return self.scopeStack[len(self.scopeStack) - 1]["scopeName"]
 	# ensure every scope has this key
 
-	def addScope(self, scopeName):
+	def addScope(self, scopeName, var):
 		currentScope = self.scopeStack[len(self.scopeStack) - 1]
 		level = currentScope['scopeLevel'] + 1
 		currentScope[scopeName] = {
@@ -69,7 +69,8 @@ class SymbolTable:
 			"type"			: "FUNCTION",
 			"returnType"	: "UNDEFINED",
 			"stringList"	: [],
-			"scopeLevel"	: level
+			"scopeLevel"	: level,
+			"var"			: var
 		}
 		# self.addIdentifier('True', 'BOOLEAN')
 		# self.addAttribute('True', scopeName, 1)

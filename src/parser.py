@@ -63,7 +63,7 @@ def p_MarkerScope(p):
 		ST.addAttribute(p[-1], ST.getCurrentScope(), place)
 		ST.addAttribute(p[-1], 'reference', p[0]['reference'])
 		TAC.emit(ST.getCurrentScope(), place, p[0]['reference'], '', '=REF')
-		ST.addScope(p[0]['reference'])
+		ST.addScope(p[0]['reference'], place)
 		TAC.createNewFucntionCode(p[0]['reference'])
 
 def p_MarkerArg(p):
@@ -74,7 +74,9 @@ def p_MarkerArg(p):
 			error('Redefinition', arg)
 		else:
 			ST.addIdentifier(arg, 'UNDEFINED')
-			place = ST.getNewTempVar()
+			level = ST.getAttribute(arg, 'scopeLevel')
+			offset = ST.getAttribute(arg, 'offset')
+			place = ST.getNewTempVar((level, offset), arg, True)
 			ST.addAttribute(arg, ST.getCurrentScope(), place)
 	ST.addAttributeToCurrentScope('numParam', len(p[-1]))
 
@@ -92,23 +94,29 @@ def p_function_call(p):
 						| NAME LPAREN testlist RPAREN 
 	"""
 	p[0] = dict()
-	place = ''
 	if not ST.exists(p[1]):
 		error('Reference', p[1])
 	else :
 		identifierType = ST.getAttribute(p[1], 'type')
 		if identifierType == 'FUNCTION':
+			if not ST.existsInCurrentScope(p[1]):
+				level = ST.getAttribute(p[1], 'scopeLevel')
+				offset = ST.getAttribute(p[1], 'offset')
+				place = ST.getNewTempVar((level, offset), p[1], True)
+				ST.addAttribute(p[1], ST.getCurrentScope(), place)
+			else:
+				place = ST.getAttribute(p[1], 'var')
+				print place
+
 			if len(p)==4:
 				pass
 			else:
 				for param in p[3]:
 					TAC.emit(ST.getCurrentScope(), param['place'], '', '', 'PARAM')
 
-			TAC.emit(ST.getCurrentScope(), '', '', p[1], 'JUMPLABEL')
-			# fname = ST.getAttribute(p[1], 'name')
-			fname = p[1]
-			# print fname
-			p[0]['type'] = ST.getAttributeFromFunctionList(fname, 'returnType')
+			TAC.emit(ST.getCurrentScope(), '', '', place, 'JUMPLABEL')
+			reference = ST.getAttribute(p[1], 'reference')
+			p[0]['type'] = ST.getAttributeFromFunctionList(reference, 'returnType')
 			returnPlace = ST.getNewTempVar()
 			TAC.emit(ST.getCurrentScope(), returnPlace, '', '', 'FUNCTION_RETURN')
 			p[0]['place'] = returnPlace
@@ -123,7 +131,7 @@ def p_varargslist(p):
 	if len(p) == 2:
 		p[0] = [p[1]]
 	else:
-		pass
+		error('Default paramater not supported', p)
 
 def p_varargslistext(p):
 	"""varargslist 	: fpdef COMMA varargslist
@@ -132,7 +140,8 @@ def p_varargslistext(p):
 	if len(p) == 4:
 		p[0] = [p[1]] + p[3]
 	else:
-		pass
+		error('Default paramater not supported', p)
+		
 
 # fpdef: NAME | '(' fplist ')'
 def p_fpdef(p):
@@ -142,7 +151,8 @@ def p_fpdef(p):
 	if len(p) == 2:
 		p[0] = p[1]
 	else:
-		pass
+		error('Tupled paramater not supported', p)
+		
 
 # fplist: fpdef (',' fpdef)* [',']
 def p_fplist(p):
@@ -152,7 +162,7 @@ def p_fplist(p):
 	if len(p) == 2:
 		p[0] = [p[1]]
 	else:
-		pass
+		error('Function Parameter not supported in this way', p)
 
 
 # stmt: simple_stmt | compound_stmt

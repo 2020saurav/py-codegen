@@ -1,5 +1,9 @@
-def myfucn():
-	print 10
+def myfun():
+	print 5
 
-# myfucn()
-print 1111
+def gho():
+	print 5
+
+myfun()
+print 90
+gho()
