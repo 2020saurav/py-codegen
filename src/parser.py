@@ -37,10 +37,10 @@ def p_single_stmt1(p):
 
 # funcdef: [decorators] 'def' NAME parameters ':' suite
 def p_funcdef(p):
-    """funcdef : DEF NAME MarkerScope parameters MarkerArg COLON suite
+    """funcdef : DEF NAME MarkerScope parameters MarkerArg COLON NEWLINE INDENT single_stmt DEDENT
     """
-    TAC.noop(ST.getCurrentScope(), p[7]['beginlist'])
-    TAC.noop(ST.getCurrentScope(), p[7]['endlist'])
+    # TAC.noop(ST.getCurrentScope(), p[9]['beginlist'])
+    # TAC.noop(ST.getCurrentScope(), p[9]['endlist'])
     TAC.emit(ST.getCurrentScope(), '', '', '', 'JUMP_RETURN')
     ST.removeCurrentScope()
     p[0] = dict()
@@ -389,7 +389,6 @@ def p_compound_stmt(p):
 	nextlist = p[1].get('nextlist',[])
 	TAC.backpatch(ST.getCurrentScope(), nextlist, p[2]['quad'])
 
-
 # if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
 
 def p_if_stmt(p):
@@ -522,6 +521,7 @@ def p_suite(p):
 		p[0] = p[1]
 	else:
 		p[0] = p[3]
+		# print "here"
 
 
 #TODO
