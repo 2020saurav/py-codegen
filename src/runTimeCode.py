@@ -71,7 +71,7 @@ class RunTimeCode:
 
 		# Now we store the value to the location in the stack
 		self.addLineToCode(['lw', '$s5', '0($s7)', ''])	  # load the value into display
-		self.addLineToCode(['li', '$s6', offset, ''])		# put the offset into $s6
+		self.addLineToCode(['li', '$s6', offset/4, ''])		# put the offset into $s6
 		self.addLineToCode(['add', '$s6', '$s6', '$s6'])	 # double the offset
 		self.addLineToCode(['add', '$s6', '$s6', '$s6'])	 # double the offset again (now 4x)
 		self.addLineToCode(['add', '$s7', '$s5', '$s6'])	 # combine the two components of the address

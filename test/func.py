@@ -1,13 +1,7 @@
-def myfun(c):
-	b = 0
-	f = b*b + c*c
-	return f
-
-def myf(d):
-	return d/2
-
-a = myfun(10)
+def myfun(c, d, e, f):
+	a = 35
+	b = a + c
+	return c+d+e+f
+a = myfun(1000, 100, 10, 1)
 print a
 
-e = myf(25)
-print e
