@@ -248,7 +248,32 @@ def sum(n):
 x = sum(100)
 print x
 ```
+Break Statement
+__________________________
 
+```
+i=1
+while i<=3:
+  if i == 2:
+    break
+  else :
+    i = 3
+```
+
+
+
+
+Continue Statement
+__________________________
+
+```
+i=1
+while i<=3:
+  if i == 2:
+    continue
+  else :
+    i = 3
+```
 Nested Functions : A special feature of our compiler
 ===================================================
 _________________________________________________

@@ -191,5 +191,5 @@ if __name__=="__main__":
 	outputFile = (filename.split('/')[-1]).split('.')[0]
 	sourcefile = open(filename)
 	code = sourcefile.read()
-	code = libraryCode + code
+	# code = libraryCode + code
 	generateMIPSCode(code)
