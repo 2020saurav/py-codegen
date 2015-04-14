@@ -18,7 +18,7 @@ myfun:
 	add		$s6,	$v0,	$s5
 	lw		$s7,	0($s6)
 	sw		$s7,	8($sp)
-	la		$v0,	-4($sp)
+	la		$v0,	-16($sp)
 	sw		$v0,	0($s6)
 	sw		$t0,	12($sp)
 	sw		$t1,	16($sp)
@@ -35,14 +35,31 @@ myfun:
 	sw		$s2,	60($sp)
 	sw		$s3,	64($sp)
 	sw		$s4,	68($sp)
-	li		$v0,	20
+	li		$v0,	16
 	sub		$sp,	$sp,	$v0
-	li		$t4,	5
-	move		$a0,	$t4
-	jal		print_integer
+	sw		$a0,	0($sp)
+	li		$t4,	0
+	mult		$t4,	$t4
+	mflo		$t5
+	la		$s5,	__display__
+	li		$s6,	1
+	add		$s6,	$s6,	$s6
+	add		$s6,	$s6,	$s6
+	add		$s7,	$s5,	$s6
+	lw		$s5,	0($s7)
+	li		$s6,	0
+	add		$s6,	$s6,	$s6
+	add		$s6,	$s6,	$s6
+	add		$s7,	$s5,	$s6
+	lw		$t6,	0($s7)
+	mult		$t6,	$t6
+	mflo		$t7
+	add		$t0,	$t5,	$t7
+	move		$v0,	$t0
+	b		myfunend
 	b		myfunend
 myfunend:
-	addi		$sp,	$sp,	20
+	addi		$sp,	$sp,	16
 	lw		$ra,	0($sp)
 	lw		$fp,	4($sp)
 	lw		$a0,	8($sp)
@@ -75,13 +92,26 @@ main:
 	la		$fp,	200($sp)
 	la		$s5,	__display__
 	lw		$s7,	0($s5)
-	la		$v0,	-12($sp)
+	la		$v0,	-24($sp)
 	sw		$v0,	0($s5)
-	li		$v0,	12
+	li		$v0,	24
 	sub		$sp,	$sp,	$v0
-	la		$t5,	myfun
-	la		$t6,	gho
-	jal		$t5
+	la		$t1,	myfun
+	la		$t2,	myf
+	li		$t3,	10
+	move		$a0,	$t3
+	jal		$t1
+	la		$s5,	__display__
+	li		$s6,	0
+	add		$s6,	$s6,	$s6
+	add		$s6,	$s6,	$s6
+	add		$s7,	$s5,	$s6
+	lw		$s5,	0($s7)
+	li		$s6,	0
+	add		$s6,	$s6,	$s6
+	add		$s6,	$s6,	$s6
+	add		$s7,	$s5,	$s6
+	lw		$t1,	0($s7)
 	la		$s5,	__display__
 	li		$s6,	0
 	add		$s6,	$s6,	$s6
@@ -92,45 +122,7 @@ main:
 	add		$s6,	$s6,	$s6
 	add		$s6,	$s6,	$s6
 	add		$s7,	$s5,	$s6
-	lw		$t6,	0($s7)
-	la		$s5,	__display__
-	li		$s6,	0
-	add		$s6,	$s6,	$s6
-	add		$s6,	$s6,	$s6
-	add		$s7,	$s5,	$s6
-	lw		$s5,	0($s7)
-	li		$s6,	0
-	add		$s6,	$s6,	$s6
-	add		$s6,	$s6,	$s6
-	add		$s7,	$s5,	$s6
-	lw		$t5,	0($s7)
-	move		$t7,	$v0
-	li		$t0,	90
-	move		$a0,	$t0
-	jal		print_integer
-	jal		$t6
-	la		$s5,	__display__
-	li		$s6,	0
-	add		$s6,	$s6,	$s6
-	add		$s6,	$s6,	$s6
-	add		$s7,	$s5,	$s6
-	lw		$s5,	0($s7)
-	li		$s6,	4
-	add		$s6,	$s6,	$s6
-	add		$s6,	$s6,	$s6
-	add		$s7,	$s5,	$s6
-	lw		$t6,	0($s7)
-	la		$s5,	__display__
-	li		$s6,	0
-	add		$s6,	$s6,	$s6
-	add		$s6,	$s6,	$s6
-	add		$s7,	$s5,	$s6
-	lw		$s5,	0($s7)
-	li		$s6,	0
-	add		$s6,	$s6,	$s6
-	add		$s6,	$s6,	$s6
-	add		$s7,	$s5,	$s6
-	lw		$t5,	0($s7)
+	lw		$t2,	0($s7)
 	la		$s5,	__display__
 	li		$s6,	0
 	add		$s6,	$s6,	$s6
@@ -141,12 +133,74 @@ main:
 	add		$s6,	$s6,	$s6
 	add		$s6,	$s6,	$s6
 	add		$s7,	$s5,	$s6
-	lw		$t0,	0($s7)
-	move		$t1,	$v0
+	lw		$t3,	0($s7)
+	move		$t8,	$v0
+	move		$a0,	$t8
+	jal		print_integer
+	li		$t9,	25
+	move		$a0,	$t9
+	jal		$t2
+	la		$s5,	__display__
+	li		$s6,	0
+	add		$s6,	$s6,	$s6
+	add		$s6,	$s6,	$s6
+	add		$s7,	$s5,	$s6
+	lw		$s5,	0($s7)
+	li		$s6,	0
+	add		$s6,	$s6,	$s6
+	add		$s6,	$s6,	$s6
+	add		$s7,	$s5,	$s6
+	lw		$t1,	0($s7)
+	la		$s5,	__display__
+	li		$s6,	0
+	add		$s6,	$s6,	$s6
+	add		$s6,	$s6,	$s6
+	add		$s7,	$s5,	$s6
+	lw		$s5,	0($s7)
+	li		$s6,	4
+	add		$s6,	$s6,	$s6
+	add		$s6,	$s6,	$s6
+	add		$s7,	$s5,	$s6
+	lw		$t2,	0($s7)
+	la		$s5,	__display__
+	li		$s6,	0
+	add		$s6,	$s6,	$s6
+	add		$s6,	$s6,	$s6
+	add		$s7,	$s5,	$s6
+	lw		$s5,	0($s7)
+	li		$s6,	12
+	add		$s6,	$s6,	$s6
+	add		$s6,	$s6,	$s6
+	add		$s7,	$s5,	$s6
+	lw		$t8,	0($s7)
+	la		$s5,	__display__
+	li		$s6,	0
+	add		$s6,	$s6,	$s6
+	add		$s6,	$s6,	$s6
+	add		$s7,	$s5,	$s6
+	lw		$s5,	0($s7)
+	li		$s6,	8
+	add		$s6,	$s6,	$s6
+	add		$s6,	$s6,	$s6
+	add		$s7,	$s5,	$s6
+	lw		$t3,	0($s7)
+	la		$s5,	__display__
+	li		$s6,	0
+	add		$s6,	$s6,	$s6
+	add		$s6,	$s6,	$s6
+	add		$s7,	$s5,	$s6
+	lw		$s5,	0($s7)
+	li		$s6,	16
+	add		$s6,	$s6,	$s6
+	add		$s6,	$s6,	$s6
+	add		$s7,	$s5,	$s6
+	lw		$t9,	0($s7)
+	move		$s1,	$v0
+	move		$a0,	$s1
+	jal		print_integer
 	jal		exit
 
-gho:
-	jal exit
+myf:
 	sub		$sp,	$sp,	72
 	sw		$ra,	0($sp)
 	sw		$fp,	4($sp)
@@ -158,7 +212,7 @@ gho:
 	add		$s6,	$v0,	$s5
 	lw		$s7,	0($s6)
 	sw		$s7,	8($sp)
-	la		$v0,	-4($sp)
+	la		$v0,	-8($sp)
 	sw		$v0,	0($s6)
 	sw		$t0,	12($sp)
 	sw		$t1,	16($sp)
@@ -175,14 +229,28 @@ gho:
 	sw		$s2,	60($sp)
 	sw		$s3,	64($sp)
 	sw		$s4,	68($sp)
-	li		$v0,	20
+	li		$v0,	8
 	sub		$sp,	$sp,	$v0
-	li		$t2,	5
-	move		$a0,	$t2
-	jal		print_integer
-	b		ghoend
-ghoend:
-	addi		$sp,	$sp,	20
+	sw		$a0,	0($sp)
+	li		$s0,	2
+	la		$s5,	__display__
+	li		$s6,	1
+	add		$s6,	$s6,	$s6
+	add		$s6,	$s6,	$s6
+	add		$s7,	$s5,	$s6
+	lw		$s5,	0($s7)
+	li		$s6,	0
+	add		$s6,	$s6,	$s6
+	add		$s6,	$s6,	$s6
+	add		$s7,	$s5,	$s6
+	lw		$s3,	0($s7)
+	div		$s3,	$s0
+	mflo		$s2
+	move		$v0,	$s2
+	b		myfend
+	b		myfend
+myfend:
+	addi		$sp,	$sp,	8
 	lw		$ra,	0($sp)
 	lw		$fp,	4($sp)
 	lw		$a0,	8($sp)

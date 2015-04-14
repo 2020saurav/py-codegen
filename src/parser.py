@@ -73,7 +73,7 @@ def p_MarkerArg(p):
 		if ST.existsInCurrentScope(arg):
 			error('Redefinition', arg)
 		else:
-			ST.addIdentifier(arg, 'UNDEFINED')
+			ST.addIdentifier(arg, 'NUMBER')
 			level = ST.getAttribute(arg, 'scopeLevel')
 			offset = ST.getAttribute(arg, 'offset')
 			place = ST.getNewTempVar((level, offset), arg, True)
@@ -106,7 +106,7 @@ def p_function_call(p):
 				ST.addAttribute(p[1], ST.getCurrentScope(), place)
 			else:
 				place = ST.getAttribute(p[1], 'var')
-				print place
+				# print place
 
 			if len(p)==4:
 				pass
@@ -122,6 +122,7 @@ def p_function_call(p):
 			p[0]['place'] = returnPlace
 		else :
 			error('Reference', p[1])
+	p[0]['type'] = 'NUMBER'
 	# p[0]['type'] = 'UNDEFINED'
 #varargslist: fpdef ['=' test] (',' fpdef ['=' test])* 
 def p_varargslist(p):
@@ -267,6 +268,11 @@ def p_expr_stmt(p):
 			except:
 				pass
 
+			try:
+				p[1]['name']
+			except:
+				error("Cannot assign to constant", p)
+
 			if ST.exists(p[1]['name']):
 				ST.addAttribute(p[1]['name'], 'type', p[3]['type'])
 				if ST.existsInCurrentScope(p[1]['name']):
@@ -354,9 +360,10 @@ def p_return_stmt(p):
 					|	RETURN test
 	"""
 	p[0] = dict()
+	p[0]['type'] = 'NUMBER'
 	if len(p) == 2:
-		ST.addAttributeToCurrentScope('returnType', 'UNDEFINED')
-		TAC.emit(ST.getCurrentScope(), '', '', '', 'RETURN')				
+		ST.addAttributeToCurrentScope('returnType', 'NUMBER')
+		TAC.emit(ST.getCurrentScope(), '0', '', '', 'RETURN')				
 	else:
 		returnType = ST.getAttributeFromCurrentScope('returnType')
 		if returnType == 'UNDEFINED':
@@ -865,7 +872,7 @@ def p_atom5(p):
 	p[0] = dict()
 	if len(p)==3:
 		p[0]['place'] = []
-		p[0]['type'] = 'UNDEFINED'
+		p[0]['type'] = 'NUMBER'
 	else:
 		p[0] = p[2]
 	p[0]['isList'] = True

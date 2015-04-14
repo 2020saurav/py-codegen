@@ -67,7 +67,7 @@ class SymbolTable:
 			"scopeName"		: scopeName,
 			"parentName"	: currentScope["scopeName"],
 			"type"			: "FUNCTION",
-			"returnType"	: "UNDEFINED",
+			"returnType"	: "NUMBER",
 			"stringList"	: [],
 			"scopeLevel"	: level,
 			"var"			: var

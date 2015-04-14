@@ -1,9 +1,13 @@
-def myfun():
-	print 5
+def myfun(c):
+	b = 0
+	f = b*b + c*c
+	return f
 
-def gho():
-	print 5
+def myf(d):
+	return d/2
 
-myfun()
-print 90
-gho()
+a = myfun(10)
+print a
+
+e = myf(25)
+print e

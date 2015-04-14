@@ -19,8 +19,8 @@ def generateMIPSCode(code):
 	sys.stderr = open('dump','w')
 	ST, TAC = z.parse(code)
 	# sys.stderr.close()
-	TAC.printCode()
-	ST.printSymbolTableHistory()
+	# TAC.printCode()
+	# ST.printSymbolTableHistory()
 	RTC = runTimeCode.RunTimeCode(ST, TAC)
 	RTC.fixLabels()
 	counter = 0
@@ -63,11 +63,15 @@ def generateMIPSCode(code):
 			#store remaining registers
 			registerAction('sw')
 			# Create space for local data
-			RTC.addLineToCode(['li','$v0',ST.getAttributeFromFunctionList(function, 'width')+16,''])
+			RTC.addLineToCode(['li','$v0',ST.getAttributeFromFunctionList(function, 'width'),''])
 			RTC.addLineToCode(['sub','$sp','$sp','$v0'])
 
 			# Copy the parameters
-			for x in range(ST.getAttributeFromFunctionList(function, 'numParam')):
+			# print ST.getAttributeFromFunctionList(function, 'numParam')
+			numParam = ST.getAttributeFromFunctionList(function, 'numParam')
+			if numParam >4:
+				parser.error("Too many parameters (max: 4)", None)
+			for x in range(numParam):
 				RTC.addLineToCode(['sw','$a' + str(x), str(4*x) + '($sp)', ''])
 
 		for line in TAC.code[function]:
@@ -82,6 +86,8 @@ def generateMIPSCode(code):
 			elif line[3] == 'PARAM':
 				RTC.addLineToCode(['move', '$a'+str(counter), RTC.getRegister(line[0]),''])
 				counter = counter +1 ;
+				if counter == 5:
+					parser.error("Too many parameters (max: 4)", None)
 
 			elif line[3] == '=':
 				RTC.addLineToCode(['move', RTC.getRegister(line[0]), RTC.getRegister(line[1]), ''])
@@ -187,7 +193,7 @@ def generateMIPSCode(code):
 			# Add a label to point to the end of the function
 			RTC.addLineToCode(['LABEL', function + 'end', '', ''])
 			# Remove the local data
-			RTC.addLineToCode(['addi','$sp','$sp',ST.getAttributeFromFunctionList(function,'width')+16])
+			RTC.addLineToCode(['addi','$sp','$sp',ST.getAttributeFromFunctionList(function,'width')])
 			# Get enviornment pointers
 			RTC.addLineToCode(['lw','$ra','0($sp)',''])
 			RTC.addLineToCode(['lw','$fp','4($sp)',''])
